@@ -1,9 +1,14 @@
 from audiolazy import *
-
+"""
+rate - Samples/second
+"""
 """
 allpass,lowpass,highpass:
 G(z) = (b0 + b1*z**-1) / (1 + a1*z**-1)
 K = tg (pi*fc/fs)
+
+fs - sample rating
+fc - cutoff frequency
 """
 
 
@@ -12,8 +17,9 @@ b0 = K/(K + 1)
 b1 = k/(K+1)
 a1 = (K-1)/(K+1)
 """
-def low_pass (cutoff):
-    k = tan(pi*cutoff)
+def low_pass (cutoff,rate=44100):
+    s,Hz = sHz(rate)
+    k = tan(2*pi*cutoff/Hz)
     b0 = k/(k + 1)
     b1 = k/(k + 1)
     a1 = (k - 1)/(k + 1)
