@@ -21,7 +21,7 @@ def low_pass (cutoff):
     return filt
 
 def highpass (cutoff):
-    pass
+    pass 
 
 def all_pass (ars):
     pass
