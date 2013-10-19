@@ -1,28 +1,59 @@
 from audiolazy import *
 
-def low_pass (stream):
+"""
+allpass,lowpass,highpass:
+G(z) = (b0 + b1*z**-1) / (1 + a1*z**-1)
+K = tg (pi*fc/fs)
+"""
+
+
+"""
+b0 = K/(K + 1)
+b1 = k/(K+1)
+a1 = (K-1)/(K+1)
+"""
+def low_pass (cutoff):
+    k = tan(pi*cutoff)
+    b0 = k/(k + 1)
+    b1 = k/(k + 1)
+    a1 = (k - 1)/(k + 1)
+    filt = (b0 + b1*z**-1) / (1 + a1*z**-1)
+    return filt
+
+def highpass (cutoff):
     pass
 
-def high_pass (stream):
+def all_pass (ars):
     pass
 
-def ressonator (stream):
+
+
+"""
+G(z) = (b0 + b1*z**-1 + b2*z**-2) / (1 + a1*z**-1 + a2*z**-2)
+
+"""
+def ressonator ():
     pass
 
-def limiter (stream):
+
+"""
+G(z) = (b0 + b1*z**-1 + b2*z**-2) / (1 + a1*z**-1 + a2*z**-2)
+
+"""
+def limiter ():
     pass
 
-def compressor (stream):
+def compressor ():
     pass
 
-def expander(stream):
+def expander():
     pass
 
-def distortion (stream):
+def distortion ():
     pass
 
-def phaser (stream):
+def phaser ():
     pass
 
-def flanger (stream):
+def flanger ():
     pass
