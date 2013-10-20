@@ -7,18 +7,26 @@ from audiolazy import *
 from scipy.io import wavfile
 
 
-filename = "notas/si.wav"#raw_input("Type your .wav file location: ")
+filename = "notas/do.wav"#raw_input("Type your .wav file location: ")
 myrate, data_sound = wavfile.read(filename)
 print myrate
 s, Hz = sHz(myrate)
 maximo = float(max(abs(data_sound.max()),abs(data_sound.min())))
 data = Stream(data_sound)/maximo
-player = AudioIO(False)
+player1 = AudioIO(False)
+player2 = AudioIO(False)
 #player.play(data)
-entrada = Stream(sinusoid(2*pi*2))
-filt = filters.low_pass(2/3.0);
+#entrada = Stream(sinusoid(2*pi*3.7/4.0))
+filt = filters.high_pass(5000)
+filt.plot(mag_scale="linear",rate=44100,max_freq=pi)
+
+#entrada = player1.play(filt(data))
+#saida = player2.play(filt(entrada))
+
+
+#filt.plot(mag_scale="linear")
 #entrada = filt(entrada)
-player.play(entrada)
+#player.play(entrada)
 
 #filt = 1 / (1 - z*pi/2)
 #filt2 = (1 + z*pi/2) / (1 - z*pi/2)
@@ -35,6 +43,7 @@ player.play(data)
 """
 
 
-stop = raw_input("Press ENTER to stop ")
-player.close()
+#stop = raw_input("Press ENTER to stop ")
+player1.close()
+player2.close()
 
