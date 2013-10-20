@@ -17,8 +17,11 @@ player1 = AudioIO(False)
 player2 = AudioIO(False)
 #player.play(data)
 #entrada = Stream(sinusoid(2*pi*3.7/4.0))
-out = filters.delay(data)
-player1.play(out)
+#data2 = thub(data,2)
+#out = filters.testfilter(data)
+
+#out = out + data
+#player1.play(out,chunk_size=16)
 #filt.plot(mag_scale="linear",rate=44100)
 
 #entrada = player1.play(filt(data))
@@ -42,6 +45,14 @@ print maximo1,maximo2,maximo
 data = data / (maximo*1.0)
 player.play(data)
 """
+
+#seno = sinusoid(pi/2)
+
+filt = (z**2 + 2168727)/(z**2 + 125.8*z + 2168727)
+filt.plot(rate=44100)
+saida = filt(data)
+player1.play(saida)
+
 
 stop = raw_input("Press ENTER to stop ")
 player1.close()
