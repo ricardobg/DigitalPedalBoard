@@ -80,8 +80,7 @@ def limiter ():
     pass
 
 def compressor (compressorSize):
-    filt = z**0 / float(compressorSize)
-    return filt
+    pass
     
 
 def expander():
