@@ -9,12 +9,22 @@ from scipy.io import wavfile
 
 filename = "notas/mi.wav"#raw_input("Type your .wav file location: ")
 myrate, data_sound = wavfile.read(filename)
-print myrate
+#print myrate
 s, Hz = sHz(myrate)
 maximo = float(max(abs(data_sound.max()),abs(data_sound.min())))
 data = Stream(data_sound)/maximo
 player1 = AudioIO(False)
 player2 = AudioIO(False)
+delay = 1.4 / (z**3 - 0.2) # Transformada Z do filtro
+data2 = delay(thub(data,2))
+#player1.play(data)
+player2.play(data2)
+stop = raw_input("Press ENTER to stop ")
+#player1.close()
+player2.close()
+
+
+#splayer2 = AudioIO(False)
 #player.play(data)
 #entrada = Stream(sinusoid(2*pi*3.7/4.0))
 #data2 = thub(data,2)
@@ -48,13 +58,23 @@ player.play(data)
 
 #seno = sinusoid(pi/2)
 
-filt = (z**2 + 2168727)/(z**2 + 125.8*z + 2168727)
-filt.plot(rate=44100)
-saida = filt(data)
-player1.play(saida)
+#filt = (z**2 + 2168727)/(z**2 + 125.8*z + 2168727)
+#filt.plot(rate=44100)
+#saida = filt(data)
+#player1.play(saida)
 
-
+"""res = filters.teste()
+data = player1.record()
+player2.play(res((data)))
 stop = raw_input("Press ENTER to stop ")
-player1.close()
 player2.close()
+player1.close()
+res = filters.teste()
+res.plot(rate=44100)
+"""
 
+#rate = 44100
+#s, Hz = sHz(rate)
+#sin = Stream(sinusoid(440*Hz))
+#tr = (440*Hz)/((440*Hz)**2 + z**2)
+#tr.plot(rate=rate,mag_scale="linear")

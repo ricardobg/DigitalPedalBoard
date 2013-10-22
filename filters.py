@@ -43,7 +43,9 @@ def high_pass (cutoff,samplefreq=44100):
     filt = (b0 + b1*z**-1) / (1 + a1*z**-1)
     return filt
 
-
+def teste (samplefreq=44100):
+      return (pi*samplefreq)/((pi*samplefreq)*2 + z**2)
+    
 def all_pass (ars):
     pass
 
@@ -68,7 +70,7 @@ G(z) = (b0 + b1*z**-1 + b2*z**-2) / (1 + a1*z**-1 + a2*z**-2)
 
 """
 def resonator (freq,band,samplefreq=44100.0):
-    res = resonator(2*pi*freq/samplefreq,2*pi*1000/samplefreq)
+    res = resonator(2*pi*freq/samplefreq,band*2*pi/samplefreq)
     return res
 
 
