@@ -7,7 +7,7 @@ from audiolazy import *
 from scipy.io import wavfile
 
 
-filename = "notas/mi.wav"#raw_input("Type your .wav file location: ")
+filename = "notas/do.wav"#raw_input("Type your .wav file location: ")
 myrate, data_sound = wavfile.read(filename)
 #print myrate
 s, Hz = sHz(myrate)
@@ -15,7 +15,8 @@ maximo = float(max(abs(data_sound.max()),abs(data_sound.min())))
 data = Stream(data_sound)/maximo
 player1 = AudioIO(False)
 player2 = AudioIO(False)
-delay = 1.4 / (z**3 - 0.2) # Transformada Z do filtro
+valores = Stream(line(44100*1, 0, -1))
+delay = 1 + valores * z ** -5 # Transformada Z do filtro
 data2 = delay(thub(data,2))
 #player1.play(data)
 player2.play(data2)

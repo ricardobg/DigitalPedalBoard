@@ -10,16 +10,16 @@ s,Hz = sHz(rate)
 # Sem efeito
 gravador = AudioIO()
 tocador = AudioIO()
-minhaStream = gravador.record()
-tocador.play(minhaStream)
+minha_stream = gravador.record()
+tocador.play(minha_stream)
 stop = raw_input("Pressione ENTER para parar: ")
 tocador.close()
 
 
 # Aplicando um passa-baixas
 
-def passa_baixas (fc,samplingfreq=44100):
-    k = tan(pi*fc/samplingfreq)
+def passa_baixas (fc,sampling_frequency=44100):
+    k = tan(pi*fc/sampling_frequency)
     b0 = k/(k+1)
     b1 = k/(k+1)
     a1 = (k-1)/(k+1)
@@ -28,19 +28,29 @@ def passa_baixas (fc,samplingfreq=44100):
     
 filtro = passa_baixas(800) # Criamos o passa baixas
 tocador = AudioIO()
-tocador.play(filtro(minhaStream))
-stop = raw_input("Pressione ENTER para parar: ")
+tocador.play(filtro(minha_stream))
+parar = raw_input("Pressione ENTER para parar: ")
 tocador.close()
 
 # Outra forma de aplicar um filtro: Multiplicação por senóide !
 senoide = sinusoid(700*Hz) # Criamos o passa baixas
 tocador = AudioIO()
-tocador.play(senoide * minhaStream)
-stop = raw_input("Pressione ENTER para parar: ")
+tocador.play(senoide * minha_stream)
+parar = raw_input("Pressione ENTER para parar: ")
+tocador.close()
+
+
+
+# Aplicando um filtro variante no tempo (filtros não LTI)
+
+sinal_variante = Stream(*line(44100/2, 0, -1))
+filtro_variante = 1 + sinal_variante * z ** -5
+tocador = AudioIO()
+tocador.play(filtro_variante(minha_stream))
+parar = raw_input("Pressione ENTER para parar: ")
 tocador.close()
 gravador.close()
 
-
 # O filtro era de fato um passa-baixas ?
 
-filtro.plot(mag_scale="linear",rate=s)
+filtro.plot(mag_scale="linear",rate=s).show()
