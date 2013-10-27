@@ -3,6 +3,7 @@
 Filtro - Exemplo 1
 """
 from audiolazy import *
+#teste
 
 rate = 44100 # Taxa de amostragem padrão (amostras/segundo)
 s,Hz = sHz(rate)
