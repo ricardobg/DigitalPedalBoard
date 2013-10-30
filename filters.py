@@ -52,6 +52,24 @@ def the_limiter(sig,threshold):
   return sig * Stream( 1. if el <= threshold else threshold / el
                        for el in maverage(size)(env(sig, cutoff=cutoff)) )
 
+
+def expander(sig,threshold,slope):
+      sig = thub(sig, 2)
+      size=256
+      env=envelope.rms
+      cutoff=pi/2048
+      return sig * Stream(slope if el <= threshold else 1.
+                      for el in maverage(size)(env(sig, cutoff=cutoff)) )
+
+
+def compressor(sig,threshold,slope):
+      sig = thub(sig, 2)
+      size=256
+      env=envelope.rms
+      cutoff=pi/2048
+      return sig * Stream(1. if el <= threshold else slope
+                      for el in maverage(size)(env(sig, cutoff=cutoff)) )
+   
 def echo (sig, echo_time):
     sig = thub(sig/2, 2)
     smixer = Streamix()
@@ -65,36 +83,7 @@ def teste (samplefreq=44100):
 def all_pass (ars):
     pass
 
-"""
-Delay filter, output = delayed input
-delay in samples
-"""
-def delay(delay=100):
-    return  z**(-delay)
-
-
-"""
-Echo filter, output = input + delayed input
-delay in samples
-"""
-    
-"""
-G(z) = (b0 + b1*z**-1 + b2*z**-2) / (1 + a1*z**-1 + a2*z**-2)
-
-"""
-
-
-"""
-G(z) = (b0 + b1*z**-1 + b2*z**-2) / (1 + a1*z**-1 + a2*z**-2)
-
-"""
-
-def compressor (compressorSize):
-    pass
-    
-
-def expander():
-    pass
+                       
 
 def distortion ():
     pass
@@ -109,15 +98,17 @@ def flanger ():
 digital_filters = {"lowpass": ["Passa-baixas",low_pass,("Frequência de Corte (Hz)"),(500)]
 , "highpass": ["Passa-altas",high_pass,("Frequência de Corte (Hz)"),(800)]
 , "ressonator": ["Ressonador",the_resonator,("Frequência Ressonante (Hz)","Tamanho da Banda (Hz)"),(800,100)]
-, "limiter": ["Limitador",the_limiter,("Início (0-1)"),(0.1) ]
+, "limiter": ["Limitador",the_limiter,("Início (0-1)"),(0.5) ]
 , "echo": ["Eco",echo,("Tempo de Eco (s)"),(0.05) ]
+, "expander": ["Expansor",expander,("Fim (0-1), Fator (0-1)"),(0.5,0.001) ]
+, "compressor": ["Compressor",compressor,("Início (0-1), Fator (0-1)"),(0.5,0.001) ]
 
     }
     
 entrada = AudioIO()
 saida = AudioIO()
 inp = entrada.record()
-output = echo(inp,0.05)
+output = compressor(inp,0.01,0.00001)
 saida.play(output)
 terminar = raw_input("Terminar")
 saida.close()
