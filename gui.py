@@ -5,7 +5,7 @@ File to create windows and widgets
 """
 import data
 import wx
-print "hi"
+main_window()
 def main_window():
     """
     Function that creates the main window of the Digital Pedalboard program

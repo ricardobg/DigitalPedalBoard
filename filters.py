@@ -1,6 +1,15 @@
 # -*- coding: utf-8 -*-
 from audiolazy import *
+
+rate = 44100
+s,Hz = sHz(rate)
+
+
+
 """
+Filters are defined in a Map:
+{"internal name":[filter_name, filter_function, params_names, param_values]
+Where param_values is a tuple that contains all parameters and its values  and param_names contains the names
 rate - Samples/second
 fs - sample rating
 fc - cutoff frequency
@@ -22,26 +31,33 @@ b0 = k/(k + 1)
 b1 = k/(k+1)
 a1 = (k-1)/(k+1)
 """
-def low_pass (cutoff,samplingfreq=44100):
-    k = tan(pi*cutoff/samplingfreq)
-    b0 = k/(k+1)
-    b1 = k/(k+1)
-    a1 = (k-1)/(k+1)
-    filt = (b0 + b1*z**-1) / (1 + a1*z**-1)
-    return filt
 
-"""
-b0 = 1/(k+1)
-b1 = -1/(k+1)
-a1 = (k-1)/(k+1)
-"""
-def high_pass (cutoff,samplefreq=44100):
-    k = tan(pi*cutoff/samplefreq)
-    b0 = 1/(k+1)
-    b1 = -1/(k+1)
-    a1 = (k-1)/(k+1)
-    filt = (b0 + b1*z**-1) / (1 + a1*z**-1)
+def low_pass (signal, cutoff):
+    filt = lowpass(cutoff*Hz)
+    return filt(signal)
+    
+def high_pass (signal,cutoff):
+    filt = highpass(cutoff*Hz)
     return filt
+  
+def the_resonator (signal,freq,band):
+    res = resonator(freq*Hz,band*Hz)
+    return res(signal)
+    
+def the_limiter(sig,threshold):
+  sig = thub(sig, 2)
+  size=256
+  env=envelope.rms
+  cutoff=pi/2048
+  return sig * Stream( 1. if el <= threshold else threshold / el
+                       for el in maverage(size)(env(sig, cutoff=cutoff)) )
+
+def echo (sig, echo_time):
+    sig = thub(sig/2, 2)
+    smixer = Streamix()
+    smixer.add(0,sig)
+    smixer.add(echo_time*s,sig)
+    return smixer
 
 def teste (samplefreq=44100):
       return (pi*samplefreq)/((pi*samplefreq)*2 + z**2)
@@ -61,25 +77,17 @@ def delay(delay=100):
 Echo filter, output = input + delayed input
 delay in samples
 """
-def echo(delay=100):
-    out = 1 + z**(-delay)
-    return out
     
 """
 G(z) = (b0 + b1*z**-1 + b2*z**-2) / (1 + a1*z**-1 + a2*z**-2)
 
 """
-def resonator (freq,band,samplefreq=44100.0):
-    res = resonator(2*pi*freq/samplefreq,band*2*pi/samplefreq)
-    return res
 
 
 """
 G(z) = (b0 + b1*z**-1 + b2*z**-2) / (1 + a1*z**-1 + a2*z**-2)
 
 """
-def limiter ():
-    pass
 
 def compressor (compressorSize):
     pass
@@ -96,3 +104,24 @@ def phaser ():
 
 def flanger ():
     pass
+
+
+digital_filters = {"lowpass": ["Passa-baixas",low_pass,("Frequência de Corte (Hz)"),(500)]
+, "highpass": ["Passa-altas",high_pass,("Frequência de Corte (Hz)"),(800)]
+, "ressonator": ["Ressonador",the_resonator,("Frequência Ressonante (Hz)","Tamanho da Banda (Hz)"),(800,100)]
+, "limiter": ["Limitador",the_limiter,("Início (0-1)"),(0.1) ]
+, "echo": ["Eco",echo,("Tempo de Eco (s)"),(0.05) ]
+
+    }
+    
+entrada = AudioIO()
+saida = AudioIO()
+inp = entrada.record()
+output = echo(inp,0.05)
+saida.play(output)
+terminar = raw_input("Terminar")
+saida.close()
+entrada.close()
+
+
+
