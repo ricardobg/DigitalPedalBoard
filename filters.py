@@ -104,11 +104,10 @@ digital_filters = {"lowpass": ["Passa-baixas",low_pass,("Frequência de Corte (H
 , "compressor": ["Compressor",compressor,("Início (0-1), Fator (0-1)"),(0.5,0.001) ]
 
     }
-    
 entrada = AudioIO()
 saida = AudioIO()
 inp = entrada.record()
-output = compressor(inp,0.01,0.00001)
+output = echo(inp,0.5)
 saida.play(output)
 terminar = raw_input("Terminar")
 saida.close()
