@@ -4,6 +4,122 @@ from audiolazy import *
 rate = 44100
 s,Hz = sHz(rate)
 
+class Filtro:
+    """ Classe para os filtros
+        - O filtro deve conter: uma função que recebe um Stream e retorna outro Stream (além de outros parametros)
+        - A função recebe um dicionário (dic) que dá um nome para cada parametro do filtro e 
+        o seu valor é uma tupla que contém (valor_padrao, tipo, (valor_inicial,valor_final))
+        - A variável params contém o dicionário acima
+        - Já a variável out é a função que recebe Stream e retorna Stream
+        - vparams é uma tupla com os valores dos parâmetros
+    """
+    def __init__(self, fun, dic):
+        self.params = dic
+        self.vparams = [valor[0] for valor in dic.values()]
+        self.out = lambda sig: (fun(sig, *(tuple(self.vparams))))
+    
+    
+    @staticmethod
+    def PassaBaixas(cutoff=700):
+        """ Retorna uma instância do Filtro passa-baixas
+        """
+        def low_pass (signal, cutoff):
+            filt = lowpass(cutoff/(float(cutoff)))
+            return filt(signal)
+        dic = {"Frqueência de Corte (Hz)":(700,int,0,20000)}
+        inst = Filtro(low_pass, dic)
+        inst.vparams[0] = cutoff
+        return inst
+    
+    @staticmethod
+    def Eco(delay=0.2):
+        """ Retorna uma instância do Eco
+        """
+        def echo (sig, echo_time):
+            sig = thub(sig, 2)
+            smixer = Streamix()
+            smixer.add(0,sig)
+            smixer.add(echo_time*s,sig)
+            return smixer
+        dic = {"Intervalo (s)":(0.2,float,0,5)}
+        inst = Filtro(echo, dic)
+        inst.vparams[0] = delay
+        return inst
+    
+    @staticmethod
+    def PassaAltas(cutoff=700):
+        """ Retorna uma instância do Passa Altas
+        """
+        def high_pass (signal,cutoff):
+            filt = highpass(cutoff*Hz)
+            filt.plot()
+            return filt(signal)
+        dic = {"Frqueência de Corte (Hz)":(700,int,0,20000)}
+        inst = Filtro(high_pass, dic)
+        inst.vparams[0] = cutoff
+        return inst
+        
+    @staticmethod
+    def PassaTudo(cutoff=700):
+        """ Retorna uma instância do Passa Tudo
+        """
+        def all_pass (signal, cutoff):
+            c = (tan(cutoff*pi/rate) - 1)/(tan(cutoff*pi/rate) + 1)
+            filt = (z**-1 + c)/(1 + c*z**-1)
+            return filt(signal)
+        dic = {"Frqueência de 'Corte' (Hz)":(700,int,0,20000)}
+        inst = Filtro(all_pass, dic)
+        inst.vparams[0] = cutoff
+        return inst
+        
+    @staticmethod
+    def Limitador(threshold=.5):
+        """ Retorna uma instância do Limiter
+        """
+        def the_limiter(sig,threshold):
+            sig = thub(sig, 2)
+            size=256
+            env=envelope.rms
+            cutoff=pi/2048
+            return sig * Stream( 1. if el <= threshold else threshold / el
+                   for el in maverage(size)(env(sig, cutoff=cutoff)) )
+
+        dic = {"Limiar (Amplitude de 0 a 1)":(.5,float,0,1)}
+        inst = Filtro(the_limiter, dic)
+        inst.vparams[0] = threshold
+        return inst
+    
+    
+    @staticmethod
+    def Compressor(threshold=.5, slope=.5):
+        """ Retorna uma instância do Compressor
+        """
+        def compressor(sig,threshold,slope):
+            sig = thub(sig, 2)
+            size=256
+            env=envelope.rms
+            cutoff=pi/2048
+            return sig * Stream(1. if el <= threshold else (slope + threshold*(1 - slope)/el)
+                    for el in maverage(size)(env(sig, cutoff=cutoff)) )
+
+        dic = {"Limiar (Amplitude de 0 a 1)":(.5,float,0,1),
+               "Tangente (0 a 1)":(.5,float,0,1)}
+        inst = Filtro(compressor, dic)
+        inst.vparams[0] = threshold
+        inst.vparams[1] = slope
+        return inst
+
+
+
+eco = Filtro.Eco()
+
+tocar = AudioIO()
+entrada = tocar.record()
+saida = eco.out(entrada)
+tocar.play(saida)
+stop = raw_input("Pressione ENTER para parar o áudio")
+tocar.close()
+
 
 
 """
@@ -33,32 +149,16 @@ a1 = (k-1)/(k+1)
 """
 
 
-def all_pass (signal, cutoff):
-    c = (tan(cutoff*pi/rate) - 1)/(tan(cutoff*pi/rate) + 1)
-    filt = (z**-1 + c)/(1 + c*z**-1)
-    return filt(signal)
 
 
-def low_pass (signal, cutoff):
-    filt = lowpass(cutoff*Hz)
-    return filt(signal)
-    
-def high_pass (signal,cutoff):
-    filt = highpass(cutoff*Hz)
-    filt.plot()
-    return filt(signal)
+
+
+
   
 def the_resonator (signal,freq,band):
     res = resonator(freq*Hz,band*Hz)
     return res(signal)
     
-def the_limiter(sig,threshold):
-  sig = thub(sig, 2)
-  size=256
-  env=envelope.rms
-  cutoff=pi/2048
-  return sig * Stream( 1. if el <= threshold else threshold / el
-                       for el in maverage(size)(env(sig, cutoff=cutoff)) )
 
 """
 Atenua as partes abaixo de certo limite
@@ -74,20 +174,7 @@ def expander(sig,threshold,slope):
 """
 Atenua partes do sinal maior do que certo limite
 """
-def compressor(sig,threshold,slope):
-      sig = thub(sig, 2)
-      size=256
-      env=envelope.rms
-      cutoff=pi/2048
-      return sig * Stream(1. if el <= threshold else (slope + threshold*(1 - slope)/el)
-                      for el in maverage(size)(env(sig, cutoff=cutoff)) )
-   
-def echo (sig, echo_time):
-    sig = thub(sig, 2)
-    smixer = Streamix()
-    smixer.add(0,sig)
-    smixer.add(echo_time*s,sig)
-    return smixer
+
 
 
 def phaser (sig, cutoff):
@@ -120,6 +207,9 @@ def flanger (sig):
 
     }
 """
+
+
+""" #Teste de sexta
 vabs = builtins.abs
 @tostream
 def distwire(sig):
@@ -133,5 +223,5 @@ with AudioIO(True) as saida:
     saida.play(output)
 
 
-
+"""
 
