@@ -12,6 +12,9 @@ class Filtro:
         - A variável params contém o dicionário acima
         - Já a variável out é a função que recebe Stream e retorna Stream
         - vparams é uma tupla com os valores dos parâmetros
+        
+        A variável estatica filtros contém um dicionário definido pelo grupo de filtros e por uma tupla contendo
+        as funções que instanciam os filtros
     """
     def __init__(self, fun, dic):
         self.params = dic
@@ -20,8 +23,8 @@ class Filtro:
     
     
     @staticmethod
-    def PassaBaixas(cutoff=700):
-        """ Retorna uma instância do Filtro passa-baixas
+    def passa_baixas(cutoff=700):
+        """ Filtro que atenua altas frequências
         """
         def low_pass (signal, cutoff):
             filt = lowpass(cutoff/(float(cutoff)))
@@ -32,7 +35,7 @@ class Filtro:
         return inst
     
     @staticmethod
-    def Eco(delay=0.2):
+    def eco(delay=0.2):
         """ Retorna uma instância do Eco
         """
         def echo (sig, echo_time):
@@ -47,8 +50,8 @@ class Filtro:
         return inst
     
     @staticmethod
-    def PassaAltas(cutoff=700):
-        """ Retorna uma instância do Passa Altas
+    def passa_altas(cutoff=700):
+        """  Filtro que atenua baixas frequências
         """
         def high_pass (signal,cutoff):
             filt = highpass(cutoff*Hz)
@@ -60,8 +63,8 @@ class Filtro:
         return inst
         
     @staticmethod
-    def PassaTudo(cutoff=700):
-        """ Retorna uma instância do Passa Tudo
+    def passa_tudo(cutoff=700):
+        """ Filtro que não muda a intensidade, apenas a fase da sua entrada
         """
         def all_pass (signal, cutoff):
             c = (tan(cutoff*pi/rate) - 1)/(tan(cutoff*pi/rate) + 1)
@@ -73,8 +76,8 @@ class Filtro:
         return inst
         
     @staticmethod
-    def Limitador(threshold=.5):
-        """ Retorna uma instância do Limiter
+    def limitador(threshold=.5):
+        """ Filtro limitador. Limita as amplitudes ao limiar
         """
         def the_limiter(sig,threshold):
             sig = thub(sig, 2)
@@ -91,8 +94,8 @@ class Filtro:
     
     
     @staticmethod
-    def Compressor(threshold=.5, slope=.5):
-        """ Retorna uma instância do Compressor
+    def compressor(threshold=.5, slope=.5):
+        """ Atenua os sons a partir de certo limiar com uma tangente
         """
         def compressor(sig,threshold,slope):
             sig = thub(sig, 2)
@@ -108,6 +111,30 @@ class Filtro:
         inst.vparams[0] = threshold
         inst.vparams[1] = slope
         return inst
+        
+    @staticmethod
+    def dist_wire(threshold=.5):
+        """ Distorção Wire
+        """
+        @tostream
+        def distwire(sig):
+            for el in sig:
+                if vabs(el) < .5: yield el
+                else: yield el/vabs(el) - el
+
+        dic = {"Limiar (Amplitude de 0 a 1)":(.5,float,0,1)}
+        inst = Filtro(dist_wire, dic)
+        inst.vparams[0] = threshold
+        return inst
+    
+   
+    filtros = {"Filtros Básicos": (passa_altas,passa_baixas,passa_tudo)
+              , "
+    
+                , "Distorções": (dist_wire)}
+        
+        
+
 
 
 
