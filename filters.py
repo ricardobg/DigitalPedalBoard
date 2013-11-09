@@ -16,10 +16,11 @@ class Filtro:
         A variável estatica filtros contém um dicionário definido pelo grupo de filtros e por uma tupla contendo
         as funções que instanciam os filtros
     """
-    def __init__(self, fun, dic):
+    def __init__(self, fun, dic, name):
         self.params = dic
         self.vparams = [valor[0] for valor in dic.values()]
         self.out = lambda sig: (fun(sig, *(tuple(self.vparams))))
+        self.name = name
     
     
     @staticmethod
@@ -30,7 +31,7 @@ class Filtro:
             filt = lowpass(cutoff/(float(cutoff)))
             return filt(signal)
         dic = {"Frqueência de Corte (Hz)":(700,int,0,20000)}
-        inst = Filtro(low_pass, dic)
+        inst = Filtro(low_pass, dic, "Passa Baixas")
         inst.vparams[0] = cutoff
         return inst
     
@@ -45,7 +46,7 @@ class Filtro:
             smixer.add(echo_time*s,sig)
             return smixer
         dic = {"Intervalo (s)":(0.2,float,0,5)}
-        inst = Filtro(echo, dic)
+        inst = Filtro(echo, dic, "Eco")
         inst.vparams[0] = delay
         return inst
     
@@ -58,7 +59,7 @@ class Filtro:
             filt.plot()
             return filt(signal)
         dic = {"Frqueência de Corte (Hz)":(700,int,0,20000)}
-        inst = Filtro(high_pass, dic)
+        inst = Filtro(high_pass, dic, "Passa Altas")
         inst.vparams[0] = cutoff
         return inst
         
@@ -71,7 +72,7 @@ class Filtro:
             filt = (z**-1 + c)/(1 + c*z**-1)
             return filt(signal)
         dic = {"Frqueência de 'Corte' (Hz)":(700,int,0,20000)}
-        inst = Filtro(all_pass, dic)
+        inst = Filtro(all_pass, dic, "Passa Tudo")
         inst.vparams[0] = cutoff
         return inst
         
@@ -88,7 +89,7 @@ class Filtro:
                    for el in maverage(size)(env(sig, cutoff=cutoff)) )
 
         dic = {"Limiar (Amplitude de 0 a 1)":(.5,float,0,1)}
-        inst = Filtro(the_limiter, dic)
+        inst = Filtro(the_limiter, dic, "Limitador")
         inst.vparams[0] = threshold
         return inst
     
@@ -107,7 +108,7 @@ class Filtro:
 
         dic = {"Limiar (Amplitude de 0 a 1)":(.5,float,0,1),
                "Tangente (0 a 1)":(.5,float,0,1)}
-        inst = Filtro(compressor, dic)
+        inst = Filtro(compressor, dic, "Compressor")
         inst.vparams[0] = threshold
         inst.vparams[1] = slope
         return inst
@@ -117,36 +118,38 @@ class Filtro:
         """ Distorção Wire
         """
         @tostream
-        def distwire(sig):
+        def distwire(sig,threshold):
             for el in sig:
-                if vabs(el) < .5: yield el
-                else: yield el/vabs(el) - el
+                if builtins.abs(el) < threshold: yield el
+                else: yield el/builtins.abs(el) - el
 
         dic = {"Limiar (Amplitude de 0 a 1)":(.5,float,0,1)}
-        inst = Filtro(dist_wire, dic)
+        inst = Filtro(distwire, dic, "Distwire")
         inst.vparams[0] = threshold
         return inst
     
    
-    filtros = {"Filtros Básicos": (passa_altas,passa_baixas,passa_tudo)
-              , "
+    filtros = {u"Filtros Básicos": (passa_altas,passa_baixas,passa_tudo)
+            , u"Limitadores": (limitador,compressor)
     
-                , "Distorções": (dist_wire)}
+                , u"Distorções": (dist_wire,)
+                , u"Delays": (eco,)                
+                }
         
         
 
 
 
-
-eco = Filtro.Eco()
-
+#filtro1 = Filtro.eco()
+#eco = Filtro.Eco()
+"""
 tocar = AudioIO()
 entrada = tocar.record()
 saida = eco.out(entrada)
 tocar.play(saida)
 stop = raw_input("Pressione ENTER para parar o áudio")
 tocar.close()
-
+"""
 
 
 """
