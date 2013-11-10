@@ -33,7 +33,7 @@ class Filtro:
             filt = lowpass(cutoff/(float(cutoff)))
             return filt(signal)
         dic = {u"Frquência de Corte (Hz)":(700,int,(0,20000))}
-        inst = Filtro(low_pass, dic, "Passa Baixas")
+        inst = Filtro(low_pass, dic, u"Passa Baixas")
         inst.vparams[0] = cutoff
         return inst
     
@@ -48,7 +48,7 @@ class Filtro:
             smixer.add(echo_time*s,sig)
             return smixer
         dic = {u"Intervalo (s)":(0.2,float,(0,5))}
-        inst = Filtro(echo, dic, "Eco")
+        inst = Filtro(echo, dic, u"Eco")
         inst.vparams[0] = delay
         return inst
     
@@ -61,7 +61,7 @@ class Filtro:
             filt.plot()
             return filt(signal)
         dic = {u"Frquência de Corte (Hz)":(700,int,(0,20000))}
-        inst = Filtro(high_pass, dic, "Passa Altas")
+        inst = Filtro(high_pass, dic, u"Passa Altas")
         inst.vparams[0] = cutoff
         return inst
         
