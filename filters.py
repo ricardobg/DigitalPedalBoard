@@ -18,11 +18,13 @@ class Filtro:
     """
     def __init__(self, fun, dic, name):
         self.params = dic
+        self.__fun = fun
         self.vparams = [valor[0] for valor in dic.values()]
         self.out = lambda sig: (fun(sig, *(tuple(self.vparams))))
         self.name = name
     
-    
+    def update_default(self):
+        self.out = lambda sig: (self.__fun(sig, *(tuple(self.vparams))))
     @staticmethod
     def passa_baixas(cutoff=700):
         """ Filtro que atenua altas frequências
@@ -30,14 +32,14 @@ class Filtro:
         def low_pass (signal, cutoff):
             filt = lowpass(cutoff/(float(cutoff)))
             return filt(signal)
-        dic = {"Frqueência de Corte (Hz)":(700,int,0,20000)}
+        dic = {u"Frquência de Corte (Hz)":(700,int,(0,20000))}
         inst = Filtro(low_pass, dic, "Passa Baixas")
         inst.vparams[0] = cutoff
         return inst
     
     @staticmethod
-    def eco(delay=0.2):
-        """ Retorna uma instância do Eco
+    def eco(delay=0.001):
+        """ Retorna uma pnlinstância do Eco
         """
         def echo (sig, echo_time):
             sig = thub(sig, 2)
@@ -45,7 +47,7 @@ class Filtro:
             smixer.add(0,sig)
             smixer.add(echo_time*s,sig)
             return smixer
-        dic = {"Intervalo (s)":(0.2,float,0,5)}
+        dic = {u"Intervalo (s)":(0.2,float,(0,5))}
         inst = Filtro(echo, dic, "Eco")
         inst.vparams[0] = delay
         return inst
@@ -58,7 +60,7 @@ class Filtro:
             filt = highpass(cutoff*Hz)
             filt.plot()
             return filt(signal)
-        dic = {"Frqueência de Corte (Hz)":(700,int,0,20000)}
+        dic = {u"Frquência de Corte (Hz)":(700,int,(0,20000))}
         inst = Filtro(high_pass, dic, "Passa Altas")
         inst.vparams[0] = cutoff
         return inst
@@ -71,8 +73,8 @@ class Filtro:
             c = (tan(cutoff*pi/rate) - 1)/(tan(cutoff*pi/rate) + 1)
             filt = (z**-1 + c)/(1 + c*z**-1)
             return filt(signal)
-        dic = {"Frqueência de 'Corte' (Hz)":(700,int,0,20000)}
-        inst = Filtro(all_pass, dic, "Passa Tudo")
+        dic = {u"Frquência de 'Corte' (Hz)":(700,int,(0,20000))}
+        inst = Filtro(all_pass, dic, u"Passa Tudo")
         inst.vparams[0] = cutoff
         return inst
         
@@ -88,8 +90,8 @@ class Filtro:
             return sig * Stream( 1. if el <= threshold else threshold / el
                    for el in maverage(size)(env(sig, cutoff=cutoff)) )
 
-        dic = {"Limiar (Amplitude de 0 a 1)":(.5,float,0,1)}
-        inst = Filtro(the_limiter, dic, "Limitador")
+        dic = {u"Limiar":(.5,float,(0,1))}
+        inst = Filtro(the_limiter, dic, u"Limitador")
         inst.vparams[0] = threshold
         return inst
     
@@ -106,9 +108,9 @@ class Filtro:
             return sig * Stream(1. if el <= threshold else (slope + threshold*(1 - slope)/el)
                     for el in maverage(size)(env(sig, cutoff=cutoff)) )
 
-        dic = {"Limiar (Amplitude de 0 a 1)":(.5,float,0,1),
-               "Tangente (0 a 1)":(.5,float,0,1)}
-        inst = Filtro(compressor, dic, "Compressor")
+        dic = {u"Limiar":(.5,float,(0,1)),
+               u"Tangente":(.5,float,(0,1))}
+        inst = Filtro(compressor, dic, u"Compressor")
         inst.vparams[0] = threshold
         inst.vparams[1] = slope
         return inst
@@ -123,8 +125,8 @@ class Filtro:
                 if builtins.abs(el) < threshold: yield el
                 else: yield el/builtins.abs(el) - el
 
-        dic = {"Limiar (Amplitude de 0 a 1)":(.5,float,0,1)}
-        inst = Filtro(distwire, dic, "Distwire")
+        dic = {u"Limiar":(.5,float,(0,1))}
+        inst = Filtro(distwire, dic, u"Distwire")
         inst.vparams[0] = threshold
         return inst
     

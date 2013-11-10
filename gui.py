@@ -6,36 +6,154 @@ File to create windows and widgets
 import data
 import filters
 import wx
+import wx.lib.agw.floatspin as fsp
 import player
+#import numpy
 
-def sair(e):
-    window.Close()
+#wx.lib.agw.floatspin.FloatSpin.
+class FloatSlider(wx.Slider):
+
+    def __init__(self, parent, id=-1, value=0.00, min_val=None, max_val=None, res=1e-4,
+                 size=wx.DefaultSize, style=wx.SL_HORIZONTAL,
+                 name='floatslider', texto=None):
+        self._value = value
+        self.defaultValue = float(value)
+        self._min = min_val
+        self._max = max_val
+        self.texto = texto
+        self._res = res
+        #self.precision = int(numpy.log10(1/res))
+        #print self.precision
+        ival, imin, imax = [round(v/res) for v in (value, min_val, max_val)]
+        self._islider = super(FloatSlider, self)
+        self._islider.__init__(
+            parent, id, ival, imin, imax, size=size, style=style, name=name
+        )
+        self.Bind(wx.EVT_SCROLL, self._OnScroll)
+
+    def _OnScroll(self, event):
+        ival = self._islider.GetValue()
+        imin = self._islider.GetMin()
+        imax = self._islider.GetMax()
+        if ival == imin:
+            self._value = self._min
+        elif ival == imax:
+            self._value = self._max
+        else:
+            self._value = ival * self._res
+        self.texto.SetValue(str(self._value))
+        event.Skip()
+        #print 'OnScroll: value=%f, ival=%d' % (self._value, ival)
+
+    def GetValue(self):
+        return self._value
+
+    def GetMin(self):
+        return self._min
+
+    def GetMax(self):
+        return self._max
+
+    def GetRes(self):
+        return self._res
+
+    def SetValue(self, value):
+        self._islider.SetValue(round(value/self._res))
+        self._value = value
+
+    def SetMin(self, minval):
+        self._islider.SetMin(round(minval/self._res))
+        self._min = minval
+
+    def SetMax(self, maxval):
+        self._islider.SetMax(round(maxval/self._res))
+        self._max = maxval
+
+    def SetRes(self, res):
+        self._islider.SetRange(round(self._min/res), round(self._max/res))
+        self._islider.SetValue(round(self._value/res))
+        self._res = res
+
+    def SetRange(self, minval, maxval):
+        self._islider.SetRange(round(minval/self._res), round(maxval/self._res))
+        self._min = minval
+        self._max = maxval
+    def UpdateValue(self, e):
+        valor = e.GetEventObject().GetValue()
+        try:
+            valor = float(valor)
+        except:
+            if valor == "":        
+                valor = self.defaultValue
+                
+            else:
+                valor = self.defaultValue
+                e.GetEventObject().SetValue(float(valor))
+            
+        self.SetValue(valor)
 
 class edit_window (wx.Dialog):
-     def __init__(self, filtro):
+     def __init__(self, window, check, filtro):
         super(edit_window, self).__init__(None) 
         self.filtro = filtro
+        self.check = check
+        self.window = window
         self.InitUI()
-        self.SetSize((250, 200))
+        self.SetSize((300, 200))
         self.SetTitle(filtro.name)
+        
+     
+     
      def InitUI(self):
 
         pnl = wx.Panel(self)
         vbox = wx.BoxSizer(wx.VERTICAL)
 
         sb = wx.StaticBox(pnl, label=u'Parâmetros')
-        sbs = wx.StaticBoxSizer(sb, orient=wx.VERTICAL)        
-        sbs.Add(wx.RadioButton(pnl, label='256 Colors', 
-            style=wx.RB_GROUP))
-        sbs.Add(wx.RadioButton(pnl, label='16 Colors'))
-        sbs.Add(wx.RadioButton(pnl, label='2 Colors'))
-        
-        hbox1 = wx.BoxSizer(wx.HORIZONTAL)        
-        hbox1.Add(wx.RadioButton(pnl, label='Custom'))
-        hbox1.Add(wx.TextCtrl(pnl), flag=wx.LEFT, border=5)
-        sbs.Add(hbox1)
-        
+        sbs = wx.StaticBoxSizer(sb, orient=wx.VERTICAL) 
+        params = self.filtro.params
+        i = 0
+        self.texts = []
+        for nome,tupla in params.items():
+            # (valor_padrao, tipo, (valor_inicial,valor_final))
+            panel_parametro = wx.Panel(pnl)
+            sizer_parametro = wx.BoxSizer(wx.VERTICAL)
+            panel_parametro.SetSizer(sizer_parametro)
+            
+            
+            panel_texto = wx.Panel(panel_parametro)
+            sizer_parametro.Add(panel_texto)
+            sizer_texto = wx.BoxSizer(wx.HORIZONTAL)
+            panel_texto.SetSizer(sizer_texto)
+            texto = wx.StaticText(panel_texto, label=nome + ": ")
+            valor = wx.TextCtrl(panel_texto, size=(50,-1), name=nome)
+            valor.SetValue(str(float(self.filtro.vparams[0])))
+                
+            sizer_texto.Add(texto, wx.EXPAND | wx.RIGHT, 5)
+            sizer_texto.Add(valor, wx.EXPAND | wx.LEFT, 5)
+            self.texts.append(valor)
+            
+            slider = FloatSlider(panel_parametro,value=float(self.filtro.vparams[0]),min_val=float(tupla[2][0])
+                        , max_val=float(tupla[2][1]),res = float((tupla[2][1]-tupla[2][0])/10000.0)
+                        ,name=nome, size=(230,-1), texto=valor)
+            valor.Bind(wx.EVT_TEXT, slider.UpdateValue)
+            sizer_parametro.Add(slider)
+            sbs.Add(panel_parametro)
+            """sbs.Add(wx.RadioButton(pnl, label='256 Colors', 
+                style=wx.RB_GROUP))
+            sbs.Add(wx.RadioButton(pnl, label='16 Colors'))
+            sbs.Add(wx.RadioButton(pnl, label='2 Colors'))
+            
+            hbox1 = wx.BoxSizer(wx.HORIZONTAL)        
+            hbox1.Add(wx.RadioButton(pnl, label='Custom'))
+            hbox1.Add(wx.TextCtrl(pnl), flag=wx.LEFT, border=5)
+            sbs.Add(hbox1)
+            """
+            i+=1
+            
         pnl.SetSizer(sbs)
+       
+       
        
         hbox2 = wx.BoxSizer(wx.HORIZONTAL)
         okButton = wx.Button(self, label='Ok')
@@ -50,11 +168,26 @@ class edit_window (wx.Dialog):
 
         self.SetSizer(vbox)
         
-        okButton.Bind(wx.EVT_BUTTON, self.OnClose)
+        okButton.Bind(wx.EVT_BUTTON, self.OnSave)
         closeButton.Bind(wx.EVT_BUTTON, self.OnClose)
    
      def OnClose(self, e): 
         self.Destroy()
+    
+     def OnSave(self, e):
+         valores = []
+         i = 0
+         for texto in self.texts:
+             try:
+                 valor = float(texto.GetValue())
+             except:
+                 valor = float(self.filtro.params.values()[i][0])
+             i += 1
+             valores.append(valor)
+         self.window.filters_edicao[self.check].vparams = valores
+         self.window.filters_edicao[self.check].update_default()
+         data.salva_defaults(self.window.filters_edicao.values())
+         self.Destroy()
     
 class main_window(wx.Frame):
     def __init__(self, *args, **kwargs):
@@ -94,7 +227,7 @@ class main_window(wx.Frame):
         self.Bind(wx.EVT_TOOL, self.OnNext, nextt)
 
 
-        #Cria os panels que contem os filtros
+        # Cria os panels que contem os filtros
         self.panel_principal = wx.Panel(self, -1)
         self.panel_principal.SetBackgroundColour("#4f5049")
         self.sizer_principal = wx.BoxSizer(wx.HORIZONTAL)
@@ -218,7 +351,7 @@ class main_window(wx.Frame):
         O Filtro está no mapa filters_edicao
         """
         filtro = self.filters_edicao[e.GetEventObject()]
-        janela = edit_window(filtro)
+        janela = edit_window(self,e.GetEventObject(),filtro)
         janela.ShowModal()
         janela.Destroy()       
     def check_filter(self, e):
