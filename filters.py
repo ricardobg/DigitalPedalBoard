@@ -4,6 +4,102 @@ from audiolazy import *
 rate = 44100
 s,Hz = sHz(rate)
 
+
+def low_pass (signal, cutoff):
+        filt = lowpass(cutoff/(float(cutoff)))
+        return filt(signal)
+def passa_baixas(cutoff=700):
+    """ Filtro que atenua altas frequências
+    """
+    dic = {u"Frquência de Corte (Hz)":(700,int,(0,20000))}
+    inst = Filtro(low_pass, dic, u"Passa Baixas")
+    inst.vparams[0] = cutoff
+    return inst
+
+def echo (sig, echo_time):
+        sig = thub(sig, 2)
+        smixer = Streamix()
+        smixer.add(0,sig)
+        smixer.add(echo_time*s,sig)
+        return smixer
+def eco(delay=0.001):
+    """ Retorna uma instância do Eco
+    """
+    dic = {u"Intervalo (s)":(0.2,float,(0,5))}
+    inst = Filtro(echo, dic, u"Eco")
+    inst.vparams[0] = delay
+    return inst
+
+def high_pass (signal,cutoff):
+        filt = highpass(cutoff*Hz)
+        return filt(signal)
+def passa_altas(cutoff=700):
+    """  Filtro que atenua baixas frequências
+    """
+    dic = {u"Frquência de Corte (Hz)":(700,int,(0,20000))}
+    inst = Filtro(high_pass, dic, u"Passa Altas")
+    inst.vparams[0] = cutoff
+    return inst
+    
+def all_pass (signal, cutoff):
+        c = (tan(cutoff*pi/rate) - 1)/(tan(cutoff*pi/rate) + 1)
+        filt = (z**-1 + c)/(1 + c*z**-1)
+        return filt(signal)
+def passa_tudo(cutoff=700):
+    """ Filtro que não muda a intensidade, apenas a fase da sua entrada
+    """
+   
+    dic = {u"Frquência de 'Corte' (Hz)":(700,int,(0,20000))}
+    inst = Filtro(all_pass, dic, u"Passa Tudo")
+    inst.vparams[0] = cutoff
+    return inst
+    
+def the_limiter(sig,threshold):
+        sig = thub(sig, 2)
+        size=256
+        env=envelope.rms
+        cutoff=pi/2048
+        return sig * Stream( 1. if el <= threshold else threshold / el
+               for el in maverage(size)(env(sig, cutoff=cutoff)) )
+
+def limitador(threshold=.5):
+    """ Filtro limitador. Limita as amplitudes ao limiar
+    """
+    dic = {u"Limiar":(.5,float,(0,1))}
+    inst = Filtro(the_limiter, dic, u"Limitador")
+    inst.vparams[0] = threshold
+    return inst
+
+def the_compressor(sig,threshold,slope):
+        sig = thub(sig, 2)
+        size=256
+        env=envelope.rms
+        cutoff=pi/2048
+        return sig * Stream(1. if el <= threshold else (slope + threshold*(1 - slope)/el)
+                for el in maverage(size)(env(sig, cutoff=cutoff)) )
+def compressor(threshold=.5, slope=.5):
+    """ Atenua os sons a partir de certo limiar com uma tangente
+    """
+    dic = {u"Limiar":(.5,float,(0,1)),
+           u"Tangente":(.5,float,(0,1))}
+    inst = Filtro(the_compressor, dic, u"Compressor")
+    inst.vparams[0] = threshold
+    inst.vparams[1] = slope
+    return inst
+    
+@tostream
+def distwire(sig,threshold):
+        for el in sig:
+            if builtins.abs(el) < threshold: yield el
+            else: yield el/builtins.abs(el) - el
+def dist_wire(threshold=.5):
+    """ Distorção Wire
+    """
+    dic = {u"Limiar":(.5,float,(0,1))}
+    inst = Filtro(distwire, dic, u"Distwire")
+    inst.vparams[0] = threshold
+    return inst
+     
 class Filtro:
     """ Classe para os filtros
         - O filtro deve conter: uma função que recebe um Stream e retorna outro Stream (além de outros parametros)
@@ -20,124 +116,18 @@ class Filtro:
         self.params = dic
         self.__fun = fun
         self.vparams = [valor[0] for valor in dic.values()]
-        self.out = lambda sig: (fun(sig, *(tuple(self.vparams))))
+       # self.out = lambda sig: (fun(sig, *(tuple(self.vparams))))
         self.name = name
-    
-    def update_default(self):
-        self.out = lambda sig: (self.__fun(sig, *(tuple(self.vparams))))
-    @staticmethod
-    def passa_baixas(cutoff=700):
-        """ Filtro que atenua altas frequências
-        """
-        def low_pass (signal, cutoff):
-            filt = lowpass(cutoff/(float(cutoff)))
-            return filt(signal)
-        dic = {u"Frquência de Corte (Hz)":(700,int,(0,20000))}
-        inst = Filtro(low_pass, dic, u"Passa Baixas")
-        inst.vparams[0] = cutoff
-        return inst
-    
-    @staticmethod
-    def eco(delay=0.001):
-        """ Retorna uma pnlinstância do Eco
-        """
-        def echo (sig, echo_time):
-            sig = thub(sig, 2)
-            smixer = Streamix()
-            smixer.add(0,sig)
-            smixer.add(echo_time*s,sig)
-            return smixer
-        dic = {u"Intervalo (s)":(0.2,float,(0,5))}
-        inst = Filtro(echo, dic, u"Eco")
-        inst.vparams[0] = delay
-        return inst
-    
-    @staticmethod
-    def passa_altas(cutoff=700):
-        """  Filtro que atenua baixas frequências
-        """
-        def high_pass (signal,cutoff):
-            filt = highpass(cutoff*Hz)
-            filt.plot()
-            return filt(signal)
-        dic = {u"Frquência de Corte (Hz)":(700,int,(0,20000))}
-        inst = Filtro(high_pass, dic, u"Passa Altas")
-        inst.vparams[0] = cutoff
-        return inst
-        
-    @staticmethod
-    def passa_tudo(cutoff=700):
-        """ Filtro que não muda a intensidade, apenas a fase da sua entrada
-        """
-        def all_pass (signal, cutoff):
-            c = (tan(cutoff*pi/rate) - 1)/(tan(cutoff*pi/rate) + 1)
-            filt = (z**-1 + c)/(1 + c*z**-1)
-            return filt(signal)
-        dic = {u"Frquência de 'Corte' (Hz)":(700,int,(0,20000))}
-        inst = Filtro(all_pass, dic, u"Passa Tudo")
-        inst.vparams[0] = cutoff
-        return inst
-        
-    @staticmethod
-    def limitador(threshold=.5):
-        """ Filtro limitador. Limita as amplitudes ao limiar
-        """
-        def the_limiter(sig,threshold):
-            sig = thub(sig, 2)
-            size=256
-            env=envelope.rms
-            cutoff=pi/2048
-            return sig * Stream( 1. if el <= threshold else threshold / el
-                   for el in maverage(size)(env(sig, cutoff=cutoff)) )
-
-        dic = {u"Limiar":(.5,float,(0,1))}
-        inst = Filtro(the_limiter, dic, u"Limitador")
-        inst.vparams[0] = threshold
-        return inst
-    
-    
-    @staticmethod
-    def compressor(threshold=.5, slope=.5):
-        """ Atenua os sons a partir de certo limiar com uma tangente
-        """
-        def compressor(sig,threshold,slope):
-            sig = thub(sig, 2)
-            size=256
-            env=envelope.rms
-            cutoff=pi/2048
-            return sig * Stream(1. if el <= threshold else (slope + threshold*(1 - slope)/el)
-                    for el in maverage(size)(env(sig, cutoff=cutoff)) )
-
-        dic = {u"Limiar":(.5,float,(0,1)),
-               u"Tangente":(.5,float,(0,1))}
-        inst = Filtro(compressor, dic, u"Compressor")
-        inst.vparams[0] = threshold
-        inst.vparams[1] = slope
-        return inst
-        
-    @staticmethod
-    def dist_wire(threshold=.5):
-        """ Distorção Wire
-        """
-        @tostream
-        def distwire(sig,threshold):
-            for el in sig:
-                if builtins.abs(el) < threshold: yield el
-                else: yield el/builtins.abs(el) - el
-
-        dic = {u"Limiar":(.5,float,(0,1))}
-        inst = Filtro(distwire, dic, u"Distwire")
-        inst.vparams[0] = threshold
-        return inst
-    
-   
+    def out (self, sig):
+        return (self.__fun(sig, *(tuple(self.vparams))))
+  #  def update_default(self):
+  #      self.out = lambda sig: (self.__fun(sig, *(tuple(self.vparams))))
     filtros = {u"Filtros Básicos": (passa_altas,passa_baixas,passa_tudo)
             , u"Limitadores": (limitador,compressor)
     
                 , u"Distorções": (dist_wire,)
                 , u"Delays": (eco,)                
                 }
-        
         
 
 

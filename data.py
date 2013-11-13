@@ -5,6 +5,7 @@ It handles user and filter settings.
 """
 
 import pickle
+
 arquivo_default = "default.data"
 
 

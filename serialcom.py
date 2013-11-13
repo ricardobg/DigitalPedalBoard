@@ -2,6 +2,7 @@
 
 import serial, threading, time
 from audiolazy import *
+import struct
 
 class SerialData (threading.Thread):
     """
@@ -18,7 +19,7 @@ class SerialData (threading.Thread):
     Seu atributo pedal contem um ControlStream usado para alterar parâmetros "on the fly" de algum filtro
     O atributo é
     """
-    def __init__(self, porta='COM6', data_rate=9600, padrao_pedaleira=0.5, func_proximo=None
+    def __init__(self, porta='COM8', data_rate=9600, padrao_pedaleira=0.5, func_proximo=None
                  , func_anterior=None, limiar_superior_pedal=3.5, limiar_inferior_pedal=0.1):
         self.serial = serial.Serial(porta,data_rate)
         self.padrao_pedal = padrao_pedaleira
@@ -38,23 +39,23 @@ class SerialData (threading.Thread):
                 except:
                     pass
                 return
-            valores = self.serial.readline().strip().split(",")
-            if len(valores) != 2:
-                continue
-            estado, valor_pedal = tuple(valores)
-            estado = int(estado)
-            valor_pedal = float(valor_pedal)/self.limiar_superior_pedal
+            linha = self.serial.readline().strip().split(",")
+            if len(linha) != 2:
+                continue;
+            ident,valor = tuple(linha)
+            ident = int(ident)
+            valor = int(valor)
+            estado = 0
+            if ident == 1:
+                estado = valor
+            elif ident == 2:
+               self.pedal.value = (float(valor)/(1023.0))
             if self.pause_thread:
                 return
             if estado == 1 and self.proximo is not None:
                 self.proximo()
             elif estado == 2 and self.anterior is not None:
-                self.anterior ()
-           
-            if valor_pedal < self.limiar_inferior_pedal:
-                valor_pedal = self.padrao_pedaleira
-            self.pedal.value = valor_pedal
-            #print self.pedal.value, estado
+                self.anterior()           
     def pause(self):
         """
         Pausa a Thread
@@ -75,8 +76,7 @@ class SerialData (threading.Thread):
         Termina a Thread e fecha a conexao com a porta serial
         """
         self.kill_thread = True
-           
-       
+                 
 #objeto = SerialData()
 #objeto.start()
 

@@ -7,9 +7,10 @@ import data
 import filters
 import wx
 import player
+import copy
 #import numpy
 
-#wx.lib.agw.floatspin.FloatSpin.
+# Adaptado de http://stackoverflow.com/questions/4709087/wxslider-with-floating-point-values
 class FloatSlider(wx.Slider):
 
     def __init__(self, parent, id=-1, value=0.00, min_val=None, max_val=None, res=1e-4,
@@ -92,7 +93,7 @@ class FloatSlider(wx.Slider):
         self.SetValue(valor)
 
 class edit_window (wx.Dialog):
-     def __init__(self, window, check, filtro):
+     def __init__(self, window, check, filtro, usando_preset=False):
         super(edit_window, self).__init__(None) 
         self.filtro = filtro
         self.check = check
@@ -100,6 +101,7 @@ class edit_window (wx.Dialog):
         self.InitUI()
         self.SetSize((300, 200))
         self.SetTitle(filtro.name)
+        self.preset = usando_preset
         
      
      
@@ -182,56 +184,133 @@ class edit_window (wx.Dialog):
                  valor = float(self.filtro.params.values()[i][0])
              i += 1
              valores.append(valor)
-         self.window.filters_edicao[self.check].vparams = valores
-         self.window.filters_edicao[self.check].update_default()
-         if self.window.preset_mode == 0:
-             data.salva_defaults(self.window.filters_edicao.values())
+         #self.window.filters_edicao[self.check].vparams = valores
+         #self.window.filters_edicao[self.check].update_default()
+         self.filtro.vparams = valores
+         if not self.preset:
+             data.salva_defaults(self.window.filters[2])
          self.Destroy()
     
 class main_window(wx.Frame):
     def __init__(self, *args, **kwargs):
         super(main_window, self).__init__(*args, **kwargs) 
         self.InitUI()
-    
-    def modo_normal(self):
-        self.status = 0
-        self.preset = []
-        self.preset_mode = 0
+    """
+    Modos (Tocando, Editando Preset, Tocando Preset)
+    """
+    def modo_tocando(self):
         if self.player is not None and not self.player.player.finished:
             self.player.pausar()
-        self.botoes_pause()
+        if self.list_edit_filters is not None:
+             self.list_edit_filters.Destroy()
+             self.list_edit_filters = None
+        for i in range(len(self.filters[0])): 
+            self.filters[0][i].SetValue(False)
+            self.filters[1][i].Enable(True)  
+        self.status = 0
+        self.preset_mode = 0
+        self.preset = []
+        self.menu.Enable(wx.ID_NEW, 1)
+        self.menu.Enable(wx.ID_OPEN, 1)
+        self.menubar.EnableTop(1, False)
+      #  self.botoes_pause()
+        
+        self.toolbar.EnableTool(wx.ID_STOP, True)
+        self.toolbar.EnableTool(wx.ID_PREVIEW_PREVIOUS, False)
+        self.toolbar.EnableTool(wx.ID_PREVIEW_NEXT, False)
+        self.toolbar.EnableTool(wx.ID_UP, True)
+        self.toolbar.SetToolNormalBitmap(wx.ID_UP ,wx.Bitmap('images/play.png'))
+        
         pass
     def modo_edita_preset(self):
+        if self.player is not None and not self.player.player.finished:
+            self.player.pausar()
+        if self.list_edit_filters is not None:
+             self.list_edit_filters.Destroy()
+             self.list_edit_filters = None
         self.status = 0
         self.preset_mode = 2
-        self.botoes_edit_preset()
+        self.menu.Enable(wx.ID_NEW, 1)
+        self.menu.Enable(wx.ID_OPEN, 1)
+        self.menubar.EnableTop(1, True)
+        self.menu_preset.Enable(wx.ID_SAVE, True)
+        self.menu_preset.Enable(wx.ID_SETUP, True)
+        self.menu_preset.Enable(wx.ID_EDIT, False)
+        
+        self.toolbar.EnableTool(wx.ID_STOP, False)
+        self.toolbar.EnableTool(wx.ID_PREVIEW_PREVIOUS, True)
+        self.toolbar.EnableTool(wx.ID_PREVIEW_NEXT, True)
+        self.toolbar.EnableTool(wx.ID_UP, False)
+        self.toolbar.SetToolNormalBitmap(wx.ID_UP ,wx.Bitmap('images/play.png'))
+        #self.botoes_edit_preset()
+        
+        
         pass
-    def modo_executa_preset(self):
-        self.status = 1
+    def modo_tocando_preset(self):
+        if self.player is not None and not self.player.player.finished:
+            self.player.pausar()
+        if self.list_edit_filters is not None:
+            self.list_edit_filters.Destroy()
+            self.list_edit_filters = None
+        self.status = 0
         self.preset_mode = 1
+        self.menu.Enable(wx.ID_NEW, 1)
+        self.menu.Enable(wx.ID_OPEN, 1)
+        self.menubar.EnableTop(1, True)
+        self.menu_preset.Enable(wx.ID_SAVE, False)
+        self.menu_preset.Enable(wx.ID_SETUP, False)
+        self.menu_preset.Enable(wx.ID_EDIT, True)
+        
+        self.toolbar.EnableTool(wx.ID_STOP, True)
+        self.toolbar.EnableTool(wx.ID_PREVIEW_PREVIOUS, True)
+        self.toolbar.EnableTool(wx.ID_PREVIEW_NEXT, True)
+        self.toolbar.EnableTool(wx.ID_UP, True)
+        self.toolbar.SetToolNormalBitmap(wx.ID_UP ,wx.Bitmap('images/play.png'))
+        
         pass
-    
+    def OnStartPreset(self ,e):
+        pass
+    def OnEditPreset(self, e):
+        pass
+    def OnVoltar(self, e):
+        self.modo_tocando()
+        pass
     def InitUI(self):    
         # Cria o menu       
         #self.SetScrollbar(wx.VERTICAL, 0, 16, 50)
-        menubar = wx.MenuBar()
-        menu = wx.Menu()
-        item1 = menu.Append(wx.ID_NEW, "Novo Preset", "Criar novo preset de filtros")
-        item2 = menu.Append(wx.ID_OPEN, "Carregar Preset", "Carregar preset de filtros")
-        item4 = menu.Append(wx.ID_SAVE, "Salvar Preset", "Salvar preset de filtros")
-        item3 = menu.Append(wx.ID_EXIT, "Sair", "Sair do aplicativo")
-        menubar.Append(menu, 'Arquivo')
-        menu.Enable(wx.ID_SAVE, 0)
-        self.SetMenuBar(menubar)
+        self.menubar = wx.MenuBar()
+        self.menu = wx.Menu()
+        item1 = self.menu.Append(wx.ID_NEW, "Novo Preset", "Criar novo preset de filtros")
+        item2 = self.menu.Append(wx.ID_OPEN, "Carregar Preset", "Carregar preset de filtros")
+        item3 = self.menu.Append(wx.ID_EXIT, "Sair", "Sair do aplicativo")
+        self.menubar.Append(self.menu , 'Arquivo')
+       
+
+        self.menu_preset = wx.Menu()
+        item_voltar = self.menu_preset.Append(wx.ID_BACKWARD, "Voltar", "Voltar")   
+        item_salvar = self.menu_preset.Append(wx.ID_SAVE, "Salvar Preset", "Salvar preset de filtros")
+        item_editar = self.menu_preset.Append(wx.ID_EDIT, "Editar Preset", "Editar Preset")
+        item_start = self.menu_preset.Append(wx.ID_SETUP, "Executar Preset", "Executar Preset")
+        self.menubar.Append(self.menu_preset , 'Preset')
+       
+             
+        
+        self.SetMenuBar(self.menubar)
+        
+        self.menubar.EnableTop(1, False)
         self.Bind(wx.EVT_MENU, self.OnNewPreset, item1)
         self.Bind(wx.EVT_MENU, self.OnLoadPreset, item2)
         self.Bind(wx.EVT_MENU, self.OnQuit, item3)
-        self.Bind(wx.EVT_MENU, self.OnSavePreset, item4)
+        self.Bind(wx.EVT_MENU, self.OnEditPreset, item_editar)
+        self.Bind(wx.EVT_MENU, self.OnSavePreset, item_salvar)
+        self.Bind(wx.EVT_MENU, self.OnStartPreset, item_start)
+        self.Bind(wx.EVT_MENU, self.OnVoltar, item_voltar)
         # Status do player 0-Parado,1-Tocando,2-Pausado
         self.status = 0      
         
-        # Status do uso do preset. 0-sem usar, 1-Reproduzindo, 2-Editando
+        # Status do uso do preset. 0-sem usar, 1-Tocando Preset, 2-Editando preset
         self.preset_mode = 0
+        # Preset = lista de lista de filtros
         self.preset = []
         # Cria  barra de menus (play/pause/next/previous)
         self.toolbar = self.CreateToolBar()
@@ -247,7 +326,7 @@ class main_window(wx.Frame):
         self.Bind(wx.EVT_TOOL, self.OnPrevious, previous)
         self.Bind(wx.EVT_TOOL, self.OnNext, nextt)
 
-
+        self.list_edit_filters = None
         # Cria os panels que contem os filtros
         self.panel_principal = wx.Panel(self, -1)
         self.panel_principal.SetBackgroundColour("#4f5049")
@@ -256,45 +335,67 @@ class main_window(wx.Frame):
         self.panel_filtros = wx.Panel(self.panel_principal)
         self.panel_filtros.SetBackgroundColour('#ffffff')
         
+        self.sizer_direita = wx.BoxSizer(wx.VERTICAL)
         
         self.panel_direita = wx.Panel(self.panel_principal,size=(320,0))
+        #self.panel_direita.SetSizer(self.sizer_direita)
         self.panel_direita.SetBackgroundColour('#000000')
         self.sizer_principal.Add(self.panel_filtros, 1, wx.EXPAND | wx.ALL, 7)      
         self.sizer_principal.Add(self.panel_direita, 0, wx.EXPAND | wx.ALL, 7)    
         self.panel_principal.SetSizer(self.sizer_principal)
         
-        
+        #self.filter_list_box(self.panel_direita,None)
         #self.filter_list("teste")    
         #self.panel = wx.Panel(self.panel_principal)
         #self.filter_list("teste")
-        self.filters = {}
-        self.filters_edicao = {}
+        
+        #Uma tupla formada por 3 listas (check,edita,filtro)
+        self.filters = ([],[],[])
+      #  self.filters_edicao = {}
         self.filtros_aplicados = []
         self.player = None
         self.filter_default_list(self.panel_filtros)
         self.Show(True)    
         self.Maximize()
+        
+   
+        
+  
     
     def botoes_pause(self):
-        self.toolbar.EnableTool(wx.ID_STOP,False)
-        self.toolbar.EnableTool(wx.ID_PREVIEW_PREVIOUS,False)
-        self.toolbar.EnableTool(wx.ID_PREVIEW_NEXT,False)
+        if self.preset_mode == 0:
+            self.toolbar.EnableTool(wx.ID_STOP,True)
+            self.toolbar.EnableTool(wx.ID_PREVIEW_PREVIOUS,False)
+            self.toolbar.EnableTool(wx.ID_PREVIEW_NEXT,False)
+       
+        if self.preset_mode == 1:
+            self.toolbar.EnableTool(wx.ID_STOP,True)
+            self.toolbar.EnableTool(wx.ID_PREVIEW_PREVIOUS,True)
+            self.toolbar.EnableTool(wx.ID_PREVIEW_NEXT,True)   
+
+        self.toolbar.EnableTool(wx.ID_UP,True)    
         self.toolbar.SetToolNormalBitmap(wx.ID_UP ,wx.Bitmap('images/play.png'))
+    
     def botoes_play(self):
-        self.toolbar.EnableTool(wx.ID_STOP, True)
-        self.toolbar.EnableTool(wx.ID_PREVIEW_PREVIOUS, True)
-        self.toolbar.EnableTool(wx.ID_PREVIEW_NEXT, True)
+        if self.preset_mode == 0:
+            self.toolbar.EnableTool(wx.ID_STOP, True)
+            self.toolbar.EnableTool(wx.ID_PREVIEW_PREVIOUS, False)
+            self.toolbar.EnableTool(wx.ID_PREVIEW_NEXT, False)
+        if self.preset_mode == 1:
+            self.toolbar.EnableTool(wx.ID_STOP, True)
+            self.toolbar.EnableTool(wx.ID_PREVIEW_PREVIOUS, True)
+            self.toolbar.EnableTool(wx.ID_PREVIEW_NEXT, True)
+        
+        self.toolbar.EnableTool(wx.ID_UP,True)  
         self.toolbar.SetToolNormalBitmap(wx.ID_UP ,wx.Bitmap('images/pause.png'))
         
     def botoes_edit_preset(self):
         self.toolbar.EnableTool(wx.ID_STOP, True)
         self.toolbar.EnableTool(wx.ID_PREVIEW_PREVIOUS, True)
         self.toolbar.EnableTool(wx.ID_PREVIEW_NEXT, True)
-        self.toolbar.EnableTool(wx.ID_UPT, False)
+        self.toolbar.EnableTool(wx.ID_UP, False)
         self.toolbar.SetToolNormalBitmap(wx.ID_UP ,wx.Bitmap('images/play.png'))
         
-    def OnSavePreset(self, e):
-        pass
     def OnQuit(self, e):
         if self.player is not None and not self.player.player.finished:
             self.player.pausar()
@@ -316,33 +417,127 @@ class main_window(wx.Frame):
                 self.player.tocar()
                 self.botoes_play()
                 self.status = 1
-        if self.preset_mode == 1: # Criando um novo preset
-            pass
+        if self.preset_mode == 1: # Reproduzindo um preset
+            if self.status == 0:
+                # Começa a tocar            
+                self.player = player.Player(tuple(self.preset))
+                self.botoes_play()
+                self.status = 1
+            elif self.status == 1:
+                # Pausa
+                self.player.pausar()
+                self.botoes_pause()
+                self.status = 2
+            else:
+                # Resume
+                self.player.tocar()
+                self.botoes_play()
+                self.status = 1
     def OnStop (self, e):
-        
         if self.preset_mode == 0:
             self.player.pausar()
             self.botoes_pause()
             self.status = 0
+        
+        if self.preset_mode == 1:
+            self.player.pausar()
+            self.botoes_pause()
+            self.status = 0
+            
     def OnNext (self, e):
         """
         Função que muda para o próximo filtro do preset atual
         """        
-        pass
+        if self.preset_mode == 1: #Tocando
+            self.player.next_filter()
+        elif self.preset_mode == 2: #Editando
+            atual = int(self.list_edit_filters.GetItems()[int(self.list_edit_filters.GetSelection())])
+            atual+=1
+            if atual >= len(self.list_edit_filters.GetItems()):
+                self.list_edit_filters.Append(str(atual))
+                self.preset.append([])
+            self.list_edit_filters.SetSelection(atual)
+            self.mostra_lista_filtro(self.get_edit_list_selection())
     def OnPrevious (self, e):
         """
         Função que muda para o filtro anterior do preset atual
         """   
+        if self.preset_mode == 1: #Tocando
+            self.player.previous_filter()
+        elif self.preset_mode == 2: #Editando
+            atual = int(self.list_edit_filters.GetItems()[int(self.list_edit_filters.GetSelection())])
+            atual-=1
+            if atual < 0:
+                return
+            self.list_edit_filters.SetSelection(atual)
+            self.mostra_lista_filtro(self.get_edit_list_selection())
+        
+    def mostra_lista_filtro(self, lista):
+        for i in range(len(self.filters[0])): 
+            self.filters[0][i].SetValue(False)
+            self.filters[1][i].Enable(False)  
+        for filtro in lista:
+            for i in range(len(self.filters[0])):
+                if filtro.name == self.filters[2][i].name:
+                    self.filters[0][i].SetValue(True)
+                    self.filters[1][i].Enable(True)  
+                    break
+                    
+    def salva_lista_filtro(self, lista):
         pass
-    def OnNewPreset(self, e):
-         if self.status == 1:
-             self.player.pausar()
-         self.botoes_pause()
-         self.status = 0
-         
     
+    def get_edit_list_selection(self):
+        if self.preset_mode == 2:
+            sel = self.list_edit_filters.GetSelection()
+            lista = []
+            if sel == wx.NOT_FOUND:
+                self.list_edit_filters.SetSelection(0)
+                sel = 0
+            else:
+                sel = int(sel)
+            sel = int(self.list_edit_filters.GetItems()[sel])
+            lista = self.preset[sel]
+            return lista
+    def OnClick(self, e):
+        """
+        Onclick da edição de preset
+        """
+        self.mostra_lista_filtro(self.get_edit_list_selection())
+            
+    def filter_list_box (self, parent, sizer, preset):
+         self.list_edit_filters = wx.ListBox(parent, -1,size=(320,600))
+        # sizer.Add(self.list_edit_filters, 0, wx.EXPAND | wx.TOP, 10)
+         self.Bind(wx.EVT_LISTBOX, self.OnClick)
+         for i in range(len(preset)):
+             self.list_edit_filters.Append(str(i))
+             
+    def OnNewPreset(self, e):
+         self.modo_edita_preset()         
+         self.preset = [[]]
+         self.filter_list_box(self.panel_direita, self.sizer_direita, self.preset)
+         self.list_edit_filters.SetSelection(0)
+         self.mostra_lista_filtro([])
+    def OnSavePreset(self, e):
+        openFileDialog = wx.FileDialog(self, "Digite o nome do arquivo para salvar o seu preset", "", "",
+                                       "Arquivos de Preset (*.preset)|*.preset", wx.FD_SAVE)
+        if openFileDialog.ShowModal() == wx.ID_CANCEL:
+            return 
+        #arquivo = open(openFileDialog.GetPath(),)
+        data.save_preset(openFileDialog.GetPath(), self.preset)
+            
     def OnLoadPreset(self, e):
-        pass
+        # Abre a janela perguntando o arquivo        
+        openFileDialog = wx.FileDialog(self, "Digite o nome do arquivo para carregar o seu preset", "", "",
+                                       "Arquivos de Preset (*.preset)|*.preset", wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
+        if openFileDialog.ShowModal() == wx.ID_CANCEL:
+            return 
+        #arquivo = open(openFileDialog.GetPath(),)
+        self.modo_edita_preset()        
+        self.preset = data.load_preset(openFileDialog.GetPath())
+        self.filter_list_box(self.panel_direita, self.sizer_direita, self.preset)
+        self.list_edit_filters.SetSelection(0)
+        self.mostra_lista_filtro(self.preset[0])
+        
     
     def filter_default_list(self, panel):
         """
@@ -366,7 +561,7 @@ class main_window(wx.Frame):
             sizer_filtros.Add(label_lista, 0, wx.EXPAND | wx.LEFT | wx.TOP, 5)
             panel_filtros.SetSizer(sizer_filtros)
             for func in funcs:
-                filtro = func.__func__()
+                filtro = func()
                 panel_um = wx.Panel(panel_filtros)     
                 sizer_um = wx.BoxSizer(wx.HORIZONTAL)
                 check = wx.CheckBox(panel_um,label=filtro.name)
@@ -377,34 +572,57 @@ class main_window(wx.Frame):
                 check.Bind(wx.EVT_CHECKBOX, self.check_filter)
                 botao.Bind(wx.EVT_BUTTON, self.edit_filter)
                 sizer_filtros.Add(panel_um, 0, wx.EXPAND | wx.ALL, 12)
-                self.filters[check] = filtro.out
-                self.filters_edicao[botao] = filtro
+                self.filters[0].append(check)
+                self.filters[1].append(botao)
+                self.filters[2].append(filtro)
             i += 1
-        data.load_defaults(self.filters_edicao.values())
+        #data.load_defaults(self.filters_edicao.values())
+        data.load_defaults(self.filters[2])
         panel.SetSizer(box_esquerda)
     
     def edit_filter (self, e):
         """
         Abre janela para edição dos parâmetros do filtro
-        O Filtro está no mapa filters_edicao
+        O Filtro está na lista na tupla self.filters para preset_mode=1
         """
-        filtro = self.filters_edicao[e.GetEventObject()]
-        janela = edit_window(self,e.GetEventObject(),filtro)
-        janela.ShowModal()
-        janela.Destroy()       
+        if self.preset_mode == 0:
+            filtro = self.filters[2][self.filters[1].index(e.GetEventObject())]
+            janela = edit_window(self,e.GetEventObject(),filtro,False)
+            janela.ShowModal()
+            janela.Destroy()       
+        elif self.preset_mode == 2:
+            filtro = self.filters[2][self.filters[1].index(e.GetEventObject())]
+            for filt in self.get_edit_list_selection():
+                if filt.name == filtro.name:
+                    filtro = filt
+                    break
+            janela = edit_window(self,e.GetEventObject(),filtro,True)
+            janela.ShowModal()
+            janela.Destroy() 
+    
     def check_filter(self, e):
-         obj = e.GetEventObject()
-         if obj.GetValue():
-             self.filtros_aplicados.append(self.filters[obj])
-         else:
-             self.filtros_aplicados.remove(self.filters[obj])
-    #def Modo_Novo
-    def filter_list(self, name):
-        """
-        Create a checkbox filter container.     
-        """
-        panel =  wx.Panel(self.panel_principal, size=(250,150))
-        wx.TextCtrl(panel,pos=(3,3), size=(250,150))
+        obj = e.GetEventObject()
+        ind = self.filters[0].index(obj)
+        if self.preset_mode == 0:
+            if obj.GetValue():
+                self.filtros_aplicados.append(self.filters[2][ind].out)
+            else:
+                self.filtros_aplicados.remove(self.filters[2][ind].out)
+        elif self.preset_mode == 2: # Editando
+            if obj.GetValue():
+                novo_filtro = copy.deepcopy(self.filters[2][ind])
+                self.get_edit_list_selection().append(novo_filtro)
+                self.filters[1][ind].Enable(True)
+            else:
+                tudo = self.get_edit_list_selection()
+                for filtro in tudo:
+                    if filtro.name == self.filters[2][ind].name:
+                        tudo.remove(filtro)
+                        break;
+                self.filters[1][ind].Enable(False)
+                    
+            
+   
 
 
 def create_main_window():
