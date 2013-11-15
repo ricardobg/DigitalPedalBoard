@@ -1,15 +1,36 @@
 # -*- coding: utf-8 -*-
+"""
+Arquivo para guardar os filtros criados.
+Todo filtro é uma instância da classe Filtro, que além
+da função que trata o sinal, contém outras informações,
+como parâmetros, nome, uso do pedal de expressão.
+"""
 from audiolazy import *
-
 rate = 44100
 s,Hz = sHz(rate)
 
+"""
+Funções que retornam Stream seguidas pela função que instancia o seu filtro com
+seus parâmetros, nome, etc.
+"""
 
+ 
+def amp(signal, ganho, ganho_max):
+    return ((ganho_max/2)*(ganho+1)) * signal
+def amplificador(ganho_max=5.0):
+    """
+    Filtro que amplifica o sinal (ganho>1)
+    """    
+    dic = {u"Valor máximo da Amplificação":(5.0,float,(0.1,10))}
+    inst = Filtro(amp, dic, u"Amplificador", True)
+    inst.vparams[0] = ganho_max
+    return inst
 def low_pass (signal, cutoff):
         filt = lowpass(cutoff/(float(cutoff)))
         return filt(signal)
 def passa_baixas(cutoff=700):
-    """ Filtro que atenua altas frequências
+    """ 
+    Filtro que atenua altas frequências
     """
     dic = {u"Frquência de Corte (Hz)":(700,int,(0,20000))}
     inst = Filtro(low_pass, dic, u"Passa Baixas")
@@ -23,7 +44,8 @@ def echo (sig, echo_time):
         smixer.add(echo_time*s,sig)
         return smixer
 def eco(delay=0.001):
-    """ Retorna uma instância do Eco
+    """
+    Retorna uma instância do Eco
     """
     dic = {u"Intervalo (s)":(0.2,float,(0,5))}
     inst = Filtro(echo, dic, u"Eco")
@@ -34,7 +56,8 @@ def high_pass (signal,cutoff):
         filt = highpass(cutoff*Hz)
         return filt(signal)
 def passa_altas(cutoff=700):
-    """  Filtro que atenua baixas frequências
+    """  
+    Filtro que atenua baixas frequências
     """
     dic = {u"Frquência de Corte (Hz)":(700,int,(0,20000))}
     inst = Filtro(high_pass, dic, u"Passa Altas")
@@ -46,7 +69,8 @@ def all_pass (signal, cutoff):
         filt = (z**-1 + c)/(1 + c*z**-1)
         return filt(signal)
 def passa_tudo(cutoff=700):
-    """ Filtro que não muda a intensidade, apenas a fase da sua entrada
+    """ 
+    Filtro que não muda a intensidade, apenas a fase da sua entrada
     """
    
     dic = {u"Frquência de 'Corte' (Hz)":(700,int,(0,20000))}
@@ -99,79 +123,50 @@ def dist_wire(threshold=.5):
     inst = Filtro(distwire, dic, u"Distwire")
     inst.vparams[0] = threshold
     return inst
+
+
+pedal = 0.0
      
 class Filtro:
-    """ Classe para os filtros
-        - O filtro deve conter: uma função que recebe um Stream e retorna outro Stream (além de outros parametros)
-        - A função recebe um dicionário (dic) que dá um nome para cada parametro do filtro e 
+    """ 
+    Classe para os filtros
+    params: Contém o dicionário que caracteriza o filtro
+    vparams: Valores padrão dos parâmetros
+    name: nome do filtro
+    usa_pedal: Indica se o filtro usa ou não o valor do pedal de expressão
+      
+    """
+    def __init__(self, fun, dic, name, usa_pedal=False):
+        """        
+        fun: Uma função que recebe um Stream e retorna outro Stream (além de outros parametros)
+        dic: Dicionário que dá um nome para cada parametro do filtro e 
         o seu valor é uma tupla que contém (valor_padrao, tipo, (valor_inicial,valor_final))
-        - A variável params contém o dicionário acima
-        - Já a variável out é a função que recebe Stream e retorna Stream
-        - vparams é uma tupla com os valores dos parâmetros
+         é uma tupla com os valores dos parâmetros
         
         A variável estatica filtros contém um dicionário definido pelo grupo de filtros e por uma tupla contendo
         as funções que instanciam os filtros
-    """
-    def __init__(self, fun, dic, name):
+        """
+        
         self.params = dic
         self.__fun = fun
         self.vparams = [valor[0] for valor in dic.values()]
-       # self.out = lambda sig: (fun(sig, *(tuple(self.vparams))))
         self.name = name
-    def out (self, sig):
-        return (self.__fun(sig, *(tuple(self.vparams))))
-  #  def update_default(self):
-  #      self.out = lambda sig: (self.__fun(sig, *(tuple(self.vparams))))
-    filtros = {u"Filtros Básicos": (passa_altas,passa_baixas,passa_tudo)
+        self.usa_pedal=usa_pedal
+   
+    def __call__ (self, sig):
+        if not self.usa_pedal:
+            return (self.__fun(sig, *(tuple(self.vparams))))
+        else:
+            return (self.__fun(sig, pedal, *(tuple(self.vparams))))
+
+
+    filtros = {u"Filtros Básicos": (passa_altas,passa_baixas,passa_tudo, amplificador)
             , u"Limitadores": (limitador,compressor)
     
                 , u"Distorções": (dist_wire,)
                 , u"Delays": (eco,)                
                 }
         
-
-
-
-#filtro1 = Filtro.eco()
-#eco = Filtro.Eco()
-"""
-tocar = AudioIO()
-entrada = tocar.record()
-saida = eco.out(entrada)
-tocar.play(saida)
-stop = raw_input("Pressione ENTER para parar o áudio")
-tocar.close()
-"""
-
-
-"""
-Filters are defined in a Map:
-{"internal name":[filter_name, filter_function, params_names, param_values]
-Where param_values is a tuple that contains all parameters and its values  and param_names contains the names
-rate - Samples/second
-fs - sample rating
-fc - cutoff frequency
-
-Obs.:
-fs = rate = (numero de amostras)/tempo = s**-1
-para fc = rate -x = x 
-Porque próximo à 2*pi, temos baixas frequências e longe de 2*pi ou perto de pi, altas frequências
-"""
-
-"""
-allpass,lowpass,highpass:
-G(z) = (b0 + b1*z**-1) / (1 + a1*z**-1)
-k = tg (pi*fc/fs)
-"""
-
-"""
-b0 = k/(k + 1)
-b1 = k/(k+1)
-a1 = (k-1)/(k+1)
-"""
-
-
-
 
 
 

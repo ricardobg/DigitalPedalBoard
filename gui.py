@@ -8,6 +8,16 @@ import filters
 import wx
 import player
 import copy
+import sys
+from wx.lib.mixins.listctrl import ListCtrlAutoWidthMixin
+import serialcom as sc
+# http://zetcode.com/wxpython/advanced/
+class AutoWidthListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin):
+    def __init__(self, parent):
+        wx.ListCtrl.__init__(self, parent, -1, style=wx.LC_REPORT)
+        ListCtrlAutoWidthMixin.__init__(self)
+    def OnResize(self, event):
+        pass
 #import numpy
 
 # Adaptado de http://stackoverflow.com/questions/4709087/wxslider-with-floating-point-values
@@ -102,8 +112,6 @@ class edit_window (wx.Dialog):
         self.SetSize((300, 200))
         self.SetTitle(filtro.name)
         self.preset = usando_preset
-        
-     
      
      def InitUI(self):
 
@@ -207,12 +215,14 @@ class main_window(wx.Frame):
         for i in range(len(self.filters[0])): 
             self.filters[0][i].SetValue(False)
             self.filters[1][i].Enable(True)  
+        self.filtros_aplicados = []
         self.status = 0
         self.preset_mode = 0
         self.preset = []
         self.menu.Enable(wx.ID_NEW, 1)
         self.menu.Enable(wx.ID_OPEN, 1)
         self.menubar.EnableTop(1, False)
+        
       #  self.botoes_pause()
         
         self.toolbar.EnableTool(wx.ID_STOP, True)
@@ -228,6 +238,7 @@ class main_window(wx.Frame):
         if self.list_edit_filters is not None:
              self.list_edit_filters.Destroy()
              self.list_edit_filters = None
+        self.filtros_aplicados = []
         self.status = 0
         self.preset_mode = 2
         self.menu.Enable(wx.ID_NEW, 1)
@@ -242,16 +253,17 @@ class main_window(wx.Frame):
         self.toolbar.EnableTool(wx.ID_PREVIEW_NEXT, True)
         self.toolbar.EnableTool(wx.ID_UP, False)
         self.toolbar.SetToolNormalBitmap(wx.ID_UP ,wx.Bitmap('images/play.png'))
-        #self.botoes_edit_preset()
         
-        
-        pass
+
+
     def modo_tocando_preset(self):
         if self.player is not None and not self.player.player.finished:
             self.player.pausar()
         if self.list_edit_filters is not None:
             self.list_edit_filters.Destroy()
             self.list_edit_filters = None
+        
+        self.filtros_aplicados = []
         self.status = 0
         self.preset_mode = 1
         self.menu.Enable(wx.ID_NEW, 1)
@@ -268,11 +280,55 @@ class main_window(wx.Frame):
         self.toolbar.SetToolNormalBitmap(wx.ID_UP ,wx.Bitmap('images/play.png'))
         
         pass
-    def OnStartPreset(self ,e):
+    def panel_normal(self, parent):
         pass
+    def panel_preset (self, parent):
+        pass
+    def __del__(self):
+        if self.player is not None and not self.player.player.finished:
+            del self.player
+        del self.pedal
+    def OnStartPreset(self ,e):
+        self.filters = ([],[],[])
+        self.filtros_aplicados = []        
+        self.sizer_esquerda.Remove(self.panel_filtros)
+        self.panel_filtros.Destroy()
+       # self.panel_filtros.Show(False)
+        self.panel_filtros = None
+        self.modo_tocando_preset()
+        self.panel_preset = wx.Panel(self.panel_esquerda)
+        self.sizer_esquerda.Add(self.panel_preset, 1, wx.EXPAND)      
+#        wx.lib.mixins.listctrl.ListCtrlAutoWidthMixin()
+        self.lista_preset = wx.ListCtrl(self.panel_preset,style=wx.LC_REPORT)
+        
+        temp_sizer = wx.BoxSizer(wx.VERTICAL)
+        self.panel_preset.SetSizer(temp_sizer)
+        self.panel_preset.SetBackgroundColour("#880000")
+        self.lista_preset.InsertColumn(0, "Filtros")
+        
+        temp_sizer.Add(self.lista_preset,1,wx.EXPAND)
+        #self.lista_preset.SetResizeColumn(0)
+        self.panel_esquerda.Fit()
+        self.sizer_principal.Layout()
+        for item in self.preset[0]:
+           self.lista_preset.InsertStringItem(sys.maxint, item.name)
+
+        self.lista_preset.SetColumnWidth(0, self.lista_preset.GetSize()[0]-5)
+        self.pedal = sc.SerialData(func_proximo=lambda: self.OnNext(None),
+                                   func_anterior=lambda: self.OnPrevious(None))
+        filters.pedal = self.pedal.pedal
+     
     def OnEditPreset(self, e):
         pass
     def OnVoltar(self, e):
+        if self.preset_mode == 1:
+            self.sizer_esquerda.Remove(self.panel_preset)
+            self.panel_preset.Destroy()
+            self.filter_default_list(self.panel_esquerda,self.sizer_esquerda)
+            self.panel_esquerda.Fit()
+            self.sizer_principal.Layout()
+            
+           
         self.modo_tocando()
         pass
     def InitUI(self):    
@@ -295,7 +351,7 @@ class main_window(wx.Frame):
        
              
         
-        self.SetMenuBar(self.menubar)
+        self.SetMenuBar(self.menubar) 
         
         self.menubar.EnableTop(1, False)
         self.Bind(wx.EVT_MENU, self.OnNewPreset, item1)
@@ -312,49 +368,78 @@ class main_window(wx.Frame):
         self.preset_mode = 0
         # Preset = lista de lista de filtros
         self.preset = []
+      
         # Cria  barra de menus (play/pause/next/previous)
+        """
         self.toolbar = self.CreateToolBar()
         previous = self.toolbar.AddLabelTool(wx.ID_PREVIEW_PREVIOUS,'Previous', wx.Bitmap('images/previous.png'))
         stop = self.toolbar.AddLabelTool(wx.ID_STOP,'Stop', wx.Bitmap('images/stop.png'))
         play = self.toolbar.AddLabelTool(wx.ID_UP,'Play/Pause', wx.Bitmap('images/play.png'))
         nextt = self.toolbar.AddLabelTool(wx.ID_PREVIEW_NEXT,'Next', wx.Bitmap('images/next.png'))
-          
-        self.botoes_pause()
         self.toolbar.Realize()
         self.Bind(wx.EVT_TOOL, self.OnPlayPause, play)
         self.Bind(wx.EVT_TOOL, self.OnStop, stop)
         self.Bind(wx.EVT_TOOL, self.OnPrevious, previous)
         self.Bind(wx.EVT_TOOL, self.OnNext, nextt)
+       
+       
+        """
+        
+        
 
         self.list_edit_filters = None
         # Cria os panels que contem os filtros
-        self.panel_principal = wx.Panel(self, -1)
+       # self.panel_principal = wx.Panel(self, -1)
+      #  wx.lib.scrolledpanel   
+        self.panel_principal = wx.ScrolledWindow(self,-1)
+        self.panel_principal.SetScrollbars(1,1,1000,1000)
         self.panel_principal.SetBackgroundColour("#4f5049")
         self.sizer_principal = wx.BoxSizer(wx.HORIZONTAL)
        
-        self.panel_filtros = wx.Panel(self.panel_principal)
-        self.panel_filtros.SetBackgroundColour('#ffffff')
-        
+        self.panel_esquerda = wx.Panel(self.panel_principal)
+        self.panel_esquerda.SetBackgroundColour('#ffffff')
+     
+        self.sizer_esquerda = wx.BoxSizer(wx.VERTICAL)
         self.sizer_direita = wx.BoxSizer(wx.VERTICAL)
-        
+
+        self.panel_esquerda.SetSizerAndFit(self.sizer_esquerda)
         self.panel_direita = wx.Panel(self.panel_principal,size=(320,0))
         #self.panel_direita.SetSizer(self.sizer_direita)
         self.panel_direita.SetBackgroundColour('#000000')
-        self.sizer_principal.Add(self.panel_filtros, 1, wx.EXPAND | wx.ALL, 7)      
+        self.sizer_principal.Add(self.panel_esquerda, 1, wx.EXPAND | wx.ALL, 7)      
         self.sizer_principal.Add(self.panel_direita, 0, wx.EXPAND | wx.ALL, 7)    
         self.panel_principal.SetSizer(self.sizer_principal)
         
-        #self.filter_list_box(self.panel_direita,None)
-        #self.filter_list("teste")    
-        #self.panel = wx.Panel(self.panel_principal)
-        #self.filter_list("teste")
+        # Botões no panel_direita
+        self.panel_botoes = wx.Panel(self.panel_direita, size=(260,60))
+        self.sizer_botoes = wx.BoxSizer(wx.HORIZONTAL)
+        self.sizer_direita.Add(self.panel_botoes, 0, wx.EXPAND | wx.ALL, 2)
+                
         
+        previous = wx.BitmapButton(self.panel_botoes, bitmap=wx.Bitmap('images/previous.png'))
+        stop = wx.BitmapButton(self.panel_botoes, bitmap=wx.Bitmap('images/stop.png'))
+        play= wx.BitmapButton(self.panel_botoes, bitmap=wx.Bitmap('images/play.png'))
+        nextt = wx.BitmapButton(self.panel_botoes, bitmap=wx.Bitmap('images/next.png'))
+
+        self.Bind(wx.EVT_BUTTON, self.OnPlayPause, play)
+        self.Bind(wx.EVT_BUTTON, self.OnStop, stop)
+        self.Bind(wx.EVT_BUTTON, self.OnPrevious, previous)
+        self.Bind(wx.EVT_BUTTON, self.OnNext, nextt)
+        self.sizer_botoes.Add(previous, 0, wx.EXPAND | wx.ALL, 1)        
+        self.sizer_direita.Add(stop, 0, wx.EXPAND | wx.ALL, 1)   
+        self.sizer_botoes.Add(play, 0, wx.EXPAND | wx.ALL, 1)   
+        self.sizer_botoes.Add(nextt, 0, wx.EXPAND | wx.ALL, 1)  
+        self.panel_botoes.SetSizer(self.sizer_botoes)
+        # Variáveis relacionadas ao filtro
         #Uma tupla formada por 3 listas (check,edita,filtro)
         self.filters = ([],[],[])
-      #  self.filters_edicao = {}
         self.filtros_aplicados = []
         self.player = None
-        self.filter_default_list(self.panel_filtros)
+        
+         
+        self.filter_default_list(self.panel_esquerda, self.sizer_esquerda)
+        self.modo_tocando()
+        
         self.Show(True)    
         self.Maximize()
         
@@ -363,6 +448,7 @@ class main_window(wx.Frame):
   
     
     def botoes_pause(self):
+                
         if self.preset_mode == 0:
             self.toolbar.EnableTool(wx.ID_STOP,True)
             self.toolbar.EnableTool(wx.ID_PREVIEW_PREVIOUS,False)
@@ -418,8 +504,9 @@ class main_window(wx.Frame):
                 self.botoes_play()
                 self.status = 1
         if self.preset_mode == 1: # Reproduzindo um preset
+            
             if self.status == 0:
-                # Começa a tocar            
+                # Começa a tocar   
                 self.player = player.Player(tuple(self.preset))
                 self.botoes_play()
                 self.status = 1
@@ -433,14 +520,17 @@ class main_window(wx.Frame):
                 self.player.tocar()
                 self.botoes_play()
                 self.status = 1
+       
     def OnStop (self, e):
         if self.preset_mode == 0:
-            self.player.pausar()
+            if self.player is not None:
+                self.player.pausar()
             self.botoes_pause()
             self.status = 0
         
         if self.preset_mode == 1:
-            self.player.pausar()
+            if self.player is not None:
+                self.player.pausar()
             self.botoes_pause()
             self.status = 0
             
@@ -450,6 +540,9 @@ class main_window(wx.Frame):
         """        
         if self.preset_mode == 1: #Tocando
             self.player.next_filter()
+            self.lista_preset.DeleteAllItems()
+            for filt in self.player.filtros[self.player.posicao]:
+                self.lista_preset.InsertStringItem(sys.maxint, filt.name)
         elif self.preset_mode == 2: #Editando
             atual = int(self.list_edit_filters.GetItems()[int(self.list_edit_filters.GetSelection())])
             atual+=1
@@ -458,12 +551,17 @@ class main_window(wx.Frame):
                 self.preset.append([])
             self.list_edit_filters.SetSelection(atual)
             self.mostra_lista_filtro(self.get_edit_list_selection())
+   
     def OnPrevious (self, e):
         """
         Função que muda para o filtro anterior do preset atual
         """   
         if self.preset_mode == 1: #Tocando
             self.player.previous_filter()
+            self.lista_preset.DeleteAllItems()
+            for filt in self.player.filtros[self.player.posicao]:
+                self.lista_preset.InsertStringItem(sys.maxint, filt.name)
+        
         elif self.preset_mode == 2: #Editando
             atual = int(self.list_edit_filters.GetItems()[int(self.list_edit_filters.GetSelection())])
             atual-=1
@@ -539,30 +637,32 @@ class main_window(wx.Frame):
         self.mostra_lista_filtro(self.preset[0])
         
     
-    def filter_default_list(self, panel):
+    def filter_default_list(self, panel, sizer):
         """
         Cria as listas de filtros padrão com checkbox e 
         """
+        self.panel_filtros = wx.Panel(panel)
+        sizer.Add(self.panel_filtros,1, wx.EXPAND | wx.ALL,1)
         box_esquerda = wx.BoxSizer(wx.VERTICAL)
         lista_filtros = filters.Filtro.filtros
         i = 0;
         for name,funcs in lista_filtros.items():
             if i % 2 == 0:            
-                panel_de_dois = wx.Panel(panel)
+                panel_de_dois = wx.Panel(self.panel_filtros)
                 panel_de_dois.SetBackgroundColour("#EEEEEE")
                 sizer_de_dois = wx.BoxSizer(wx.HORIZONTAL)
                 box_esquerda.Add(panel_de_dois, 1, wx.EXPAND | wx.ALL, 10)  
                 panel_de_dois.SetSizer(sizer_de_dois)
-            panel_filtros = wx.Panel(panel_de_dois)
-            panel_filtros.SetBackgroundColour("#CCCCCC")
-            sizer_de_dois.Add(panel_filtros, 1, wx.EXPAND | wx.RIGHT, wx.LEFT, 5)
+            panelTemp = wx.Panel(panel_de_dois)
+            panelTemp.SetBackgroundColour("#CCCCCC")
+            sizer_de_dois.Add(panelTemp, 1, wx.EXPAND | wx.RIGHT, wx.LEFT, 5)
             sizer_filtros = wx.BoxSizer(wx.VERTICAL)
-            label_lista = wx.StaticText(panel_filtros, label=name)
+            label_lista = wx.StaticText(panelTemp, label=name)
             sizer_filtros.Add(label_lista, 0, wx.EXPAND | wx.LEFT | wx.TOP, 5)
-            panel_filtros.SetSizer(sizer_filtros)
+            panelTemp.SetSizer(sizer_filtros)
             for func in funcs:
                 filtro = func()
-                panel_um = wx.Panel(panel_filtros)     
+                panel_um = wx.Panel(panelTemp)     
                 sizer_um = wx.BoxSizer(wx.HORIZONTAL)
                 check = wx.CheckBox(panel_um,label=filtro.name)
                 botao = wx.Button(panel_um,label="Editar")
@@ -576,9 +676,15 @@ class main_window(wx.Frame):
                 self.filters[1].append(botao)
                 self.filters[2].append(filtro)
             i += 1
-        #data.load_defaults(self.filters_edicao.values())
         data.load_defaults(self.filters[2])
-        panel.SetSizer(box_esquerda)
+        self.panel_filtros.SetSizer(box_esquerda)
+        self.panel_filtros.Fit()        
+        panel.Fit()
+        panel.Layout()
+        self.Layout()
+        self.panel_filtros.Update()
+        panel.Update()
+        sizer.Layout()
     
     def edit_filter (self, e):
         """
@@ -605,9 +711,9 @@ class main_window(wx.Frame):
         ind = self.filters[0].index(obj)
         if self.preset_mode == 0:
             if obj.GetValue():
-                self.filtros_aplicados.append(self.filters[2][ind].out)
+                self.filtros_aplicados.append(self.filters[2][ind])
             else:
-                self.filtros_aplicados.remove(self.filters[2][ind].out)
+                self.filtros_aplicados.remove(self.filters[2][ind])
         elif self.preset_mode == 2: # Editando
             if obj.GetValue():
                 novo_filtro = copy.deepcopy(self.filters[2][ind])
@@ -621,9 +727,6 @@ class main_window(wx.Frame):
                         break;
                 self.filters[1][ind].Enable(False)
                     
-            
-   
-
 
 def create_main_window():
     """

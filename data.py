@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-File to handle data.
-It handles user and filter settings.
+Arquivo para gerenciar o salvamento e carregamento de dados
+Gerencia valores padrão e também arquivos de preset
 """
 
 import pickle
@@ -12,7 +12,7 @@ arquivo_default = "default.data"
 def load_preset(preset_file):
     """
     Carrega um preset, retorna None se não encontrar o arquivo ou arquivo inválido.
-    As configurações do preset (parametros dos filtros) são salvas tambem
+    As configurações do preset (parametros dos filtros) são salvas também
     e não interferem nos defaults dos filtros.
     """
     try:
@@ -33,7 +33,7 @@ def save_preset(preset_file, preset_list):
 
 def load_defaults(lista_filtros):
     """
-    Lê a lista
+    Lê a lista de Defaults, carregando os filtros com os padrões
     """
     try:
         arquivo = open(arquivo_default,"r")
@@ -48,7 +48,7 @@ def load_defaults(lista_filtros):
 
 def salva_defaults(lista_filtros):
     """
-    Função que salva um mapa contendo o nome do filtro e uma lista dos valores padrão dos filtros
+    Função que salva os valores default
     """
     padroes = {}
     for filtro in lista_filtros:
