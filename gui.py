@@ -131,7 +131,9 @@ class DataGen(object):
         self.window = window
     def next(self):
         if self.window.player is not None:
-            return self.window.player.last_input_output()
+            retorno = self.window.player.last_input_output()
+            print retorno
+            return retorno
 
    
 class main_window(wx.Frame):
@@ -179,6 +181,11 @@ class main_window(wx.Frame):
         if self.list_edit_filters is not None:
              self.list_edit_filters.Destroy()
              self.list_edit_filters = None
+        if len(self.filters[0]) == 0:
+            self.sizer_esquerda.Remove(self.panel_preset)
+            self.panel_preset.Destroy()            
+            self.filter_default_list(self.panel_esquerda, self.sizer_esquerda)
+            
         self.filtros_aplicados = []
         
         self.preset_mode = 2
@@ -526,6 +533,8 @@ class main_window(wx.Frame):
         """
         Função que vai redesenhando o gráfico
         """
+        if self.pausa_grafico:
+            return
         if self.status != 1:
             self.plot_data_input.set_xdata(np.arange(len(self.data_input)))
             self.plot_data_input.set_ydata(np.array(self.data_input))
@@ -539,8 +548,8 @@ class main_window(wx.Frame):
         tupla = self.input_data_generator.next()
         self.data_input.append(tupla[0])
         xmax_in = len(self.data_input) if len(self.data_input) > 100 else 100
-        xmin_in = xmax_in - 100       
-        size = round(max(abs(max(self.data_input)),abs(min(self.data_input))),2)
+        xmin_in = xmax_in - 100   
+        size = round(max(abs(max(self.data_input[:len(self.data_input)-1])),abs(min(self.data_input))),2)
         ymax_in = size*1.1
         ymin_in = size*(-1.1)     
         if size == 0.00:
@@ -649,6 +658,7 @@ class main_window(wx.Frame):
                 self.timer_graph.Start(self.graph_refresh_time)
             elif self.status == 1:
                 # Pausa
+                self.timer_graph.Stop()
                 self.player.pausar()
                 self.botoes_pause()
                 self.status = 2
@@ -686,10 +696,12 @@ class main_window(wx.Frame):
         Função que muda para o próximo filtro do preset atual
         """        
         if self.preset_mode == 1: # Tocando
+            self.pausa_grafico = True
             self.player.next_filter()
             self.lista_preset.DeleteAllItems()
             for filt in self.player.filtros[self.player.posicao]:
                 self.lista_preset.InsertStringItem(sys.maxint, filt.name)
+            self.pausa_grafico = False
         elif self.preset_mode == 2: # Editando
             atual = int(self.list_edit_filters.GetItems()[int(self.list_edit_filters.GetSelection())])
             atual+=1
@@ -704,11 +716,12 @@ class main_window(wx.Frame):
         Função que muda para o filtro anterior do preset atual
         """   
         if self.preset_mode == 1: #Tocando
+            self.pausa_grafico = True
             self.player.previous_filter()
             self.lista_preset.DeleteAllItems()
             for filt in self.player.filtros[self.player.posicao]:
                 self.lista_preset.InsertStringItem(sys.maxint, filt.name)
-        
+            self.pausa_grafico = False
         elif self.preset_mode == 2: #Editando
             atual = int(self.list_edit_filters.GetItems()[int(self.list_edit_filters.GetSelection())])
             atual-=1
@@ -778,6 +791,7 @@ class main_window(wx.Frame):
          
          try:
             self.panel_graficos.Destroy()
+            
          except:
             pass
          self.panel_direita.Fit()
@@ -821,7 +835,6 @@ class main_window(wx.Frame):
         self.panel_direita.Fit()
         self.panel_direita.Layout()
         self.Layout()
-        self.panel_direita.Update()
         self.panel_direita.Update()
         self.sizer_direita.Layout()
        
@@ -879,13 +892,23 @@ class main_window(wx.Frame):
             i += 1
         data.load_defaults(self.filters[2])
         self.panel_filtros.SetSizer(box_esquerda)
-        self.panel_filtros.Fit()        
-        panel.Fit()
-        panel.Layout()
+              
+        """       
+        self.panel_direita.Fit()
+        self.panel_direita.Layout()
         self.Layout()
-        self.panel_filtros.Update()
-        panel.Update()
-        sizer.Layout()
+        self.panel_direita.Update()
+        self.sizer_direita.Layout()      
+        """
+        self.panel_esquerda.Fit()
+        self.sizer_principal.Layout()
+        self.panel_direita.Fit()
+        self.panel_direita.Layout()
+        self.Layout()
+        self.panel_direita.Update()
+        self.panel_direita.Update()
+        self.sizer_direita.Layout()
+        
     
     def edit_filter (self, e):
         """

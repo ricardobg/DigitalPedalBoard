@@ -58,7 +58,7 @@ class Player():
         self.release = 1 * filters.s
         self.rate = rate
         self.player = AudioIO(False)
-        self.streamix = MyStreamix()
+        self.streamix = Streamix()
         self.input =  ChangeableStream(self.player.record(nchannels=ncanais,rate=rate))
         self.dados = self.filter(self.input)
         self.stream = ChangeableStream(self.dados)
@@ -75,14 +75,13 @@ class Player():
         Na forma de tupla (in,out)
         """
         if not self.player.finished:
-            return (self.input.last,self.streamix.last)
+            return (self.input.last,self.stream.last)
         return (0.0,0.0)
     def muda_filtro(self, novos_filtros):
         """
         Muda o filtro aplicado, garantindo que não haja um "click" ao fazer isso
         """
-        """
-        if self.tipo == 1:
+        """if self.tipo == 1:
             self.filtros = novos_filtros
         novo_filtro = CascadeFilter(novos_filtros)
         last = self.stream.last
@@ -92,6 +91,7 @@ class Player():
         self.stream = ChangeableStream(self.dados)
         self.stream.last = 0.0
         self.streamix.add(0,self.stream)
+        
         """
         novo_filtro = CascadeFilter(novos_filtros)
         self.filter = novo_filtro
@@ -104,9 +104,8 @@ class Player():
         self.stream = ChangeableStream(self.dados)
         self.stream.last = 0.0
         self.streamix.add(0,self.stream)
-        
         self.player.close()  
-        player2.play(self.streamix)
+        player2.play(self.stream)
         self.player = player2
         
         
@@ -121,6 +120,7 @@ class Player():
         if len(self.filtros) == self.posicao:
             self.posicao = 0
         self.muda_filtro(self.filtros[self.posicao])
+       
 
     def previous_filter(self):
         """
