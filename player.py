@@ -15,7 +15,15 @@ class ChangeableStream(Stream):
     while True:
       self.last = next(self._data)
       yield self.last
-  
+
+class MyStreamix(Streamix):
+  """
+  Mudança na classe Streamix para guardarmos o último valor
+  """
+  def __iter__(self):
+    while True:
+      self.last = next(self._data)
+      yield self.last
 
 
 class Player():
@@ -47,28 +55,61 @@ class Player():
         
         self.ncanais = ncanais
         ms = 1e-3 * filters.s
-        self.release = 50 * ms
+        self.release = 1 * filters.s
         self.rate = rate
         self.player = AudioIO(False)
-        self.streamix = Streamix()
-        self.input =  self.player.record(nchannels=ncanais,rate=rate)
+        self.streamix = MyStreamix()
+        self.input =  ChangeableStream(self.player.record(nchannels=ncanais,rate=rate))
         self.dados = self.filter(self.input)
         self.stream = ChangeableStream(self.dados)
+        self.stream.last = 0.0
+        self.streamix.last = 0.0
+        self.input.last = 0.0
         self.streamix.add(0, self.stream)
+        
         self.player.play(self.streamix)
         
-      
+    def last_input_output(self):
+        """
+        Função que retorna os últimos valores de input e output
+        Na forma de tupla (in,out)
+        """
+        if not self.player.finished:
+            return (self.input.last,self.streamix.last)
+        return (0.0,0.0)
     def muda_filtro(self, novos_filtros):
         """
         Muda o filtro aplicado, garantindo que não haja um "click" ao fazer isso
         """
+        """
+        if self.tipo == 1:
+            self.filtros = novos_filtros
         novo_filtro = CascadeFilter(novos_filtros)
         last = self.stream.last
-        self.stream.limit(0).append(line(1*filters.s,last,0))
+        self.stream.limit(0).append(line(self.release,last,0))
         self.filter = novo_filtro
         self.dados = self.filter(self.input)
         self.stream = ChangeableStream(self.dados)
+        self.stream.last = 0.0
         self.streamix.add(0,self.stream)
+        """
+        novo_filtro = CascadeFilter(novos_filtros)
+        self.filter = novo_filtro
+        last = self.stream.last
+        self.stream.limit(0).append(line(self.release,last,0))
+        player2 = AudioIO(False)
+        self.input = ChangeableStream(player2.record(nchannels=self.ncanais,rate=self.rate))
+        self.input.last = 0.0
+        self.dados = self.filter(self.input)
+        self.stream = ChangeableStream(self.dados)
+        self.stream.last = 0.0
+        self.streamix.add(0,self.stream)
+        
+        self.player.close()  
+        player2.play(self.streamix)
+        self.player = player2
+        
+        
         
     def next_filter(self):
         """
@@ -102,14 +143,13 @@ class Player():
         if not self.player.finished:
             self.player.close()
 
-    def tocar (self, lisa_filtros=None):
+    def tocar (self, lista_filtros=None):
         """
         Reinicia o player (tanto quando ele é pausado como parado)
         """
         if lista_filtros is None:
             lista_filtros = self.filtros
-        self.__init__(lista_filtros,pos=self.posicao,ncanais=self.ncanais,rate=self.rate,
-                      fun_prox=self.fun_prox, fun_ant=self.fun_ant)
+        self.__init__(lista_filtros,pos=self.posicao,ncanais=self.ncanais,rate=self.rate)
         
         
         

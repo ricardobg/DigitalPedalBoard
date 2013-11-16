@@ -125,7 +125,8 @@ def dist_wire(threshold=.5):
     return inst
 
 
-pedal = 0.0
+# Variável ControlStream (ou inteiro) com a entrada do pedal
+pedal = 0.5
      
 class Filtro:
     """ 

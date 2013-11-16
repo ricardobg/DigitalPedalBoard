@@ -24,7 +24,7 @@ class SerialData (threading.Thread):
         limiar_inferior_pedal: Valor mínimo, abaixo desse valor usamos o padrao_pedaleira como entrada
         """        
         try:
-            self.serial = serial.Serial(porta,data_rate)
+            
             self.padrao_pedal = padrao_pedaleira
             self.pedal = ControlStream(self.padrao_pedal)
             self.proximo = func_proximo
@@ -33,6 +33,7 @@ class SerialData (threading.Thread):
             self.limiar_inferior_pedal = limiar_inferior_pedal
             self.kill_thread = False
             self.pause_thread = False    
+            self.serial = serial.Serial(porta,data_rate)
             threading.Thread.__init__(self)
         except:
             self.pedal = ControlStream(self.padrao_pedal)

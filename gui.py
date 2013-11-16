@@ -9,15 +9,9 @@ import wx
 import player
 import copy
 import sys
-from wx.lib.mixins.listctrl import ListCtrlAutoWidthMixin
+
 import serialcom as sc
-# http://zetcode.com/wxpython/advanced/
-class AutoWidthListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin):
-    def __init__(self, parent):
-        wx.ListCtrl.__init__(self, parent, -1, style=wx.LC_REPORT)
-        ListCtrlAutoWidthMixin.__init__(self)
-    def OnResize(self, event):
-        pass
+
 #import numpy
         
         
@@ -25,98 +19,27 @@ import matplotlib
 matplotlib.use('WXAgg')
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_wxagg import \
-    FigureCanvasWxAgg as FigCanvas, \
-    NavigationToolbar2WxAgg as NavigationToolbar
+    FigureCanvasWxAgg as FigCanvas
 import numpy as np
 import pylab
-import pprint
+from lib import FloatSlider
 from audiolazy import *
 
 
-# Adaptado de http://stackoverflow.com/questions/4709087/wxslider-with-floating-point-values
-class FloatSlider(wx.Slider):
-
-    def __init__(self, parent, id=-1, value=0.00, min_val=None, max_val=None, res=1e-4,
-                 size=wx.DefaultSize, style=wx.SL_HORIZONTAL,
-                 name='floatslider', texto=None):
-        self._value = value
-        self.defaultValue = float(value)
-        self._min = min_val
-        self._max = max_val
-        self.texto = texto
-        self._res = res
-        #self.precision = int(numpy.log10(1/res))
-        #print self.precision
-        ival, imin, imax = [round(v/res) for v in (value, min_val, max_val)]
-        self._islider = super(FloatSlider, self)
-        self._islider.__init__(
-            parent, id, ival, imin, imax, size=size, style=style, name=name
-        )
-        self.Bind(wx.EVT_SCROLL, self._OnScroll)
-
-    def _OnScroll(self, event):
-        ival = self._islider.GetValue()
-        imin = self._islider.GetMin()
-        imax = self._islider.GetMax()
-        if ival == imin:
-            self._value = self._min
-        elif ival == imax:
-            self._value = self._max
-        else:
-            self._value = ival * self._res
-        self.texto.SetValue(str(self._value))
-        event.Skip()
-        #print 'OnScroll: value=%f, ival=%d' % (self._value, ival)
-
-    def GetValue(self):
-        return self._value
-
-    def GetMin(self):
-        return self._min
-
-    def GetMax(self):
-        return self._max
-
-    def GetRes(self):
-        return self._res
-
-    def SetValue(self, value):
-        self._islider.SetValue(round(value/self._res))
-        self._value = value
-
-    def SetMin(self, minval):
-        self._islider.SetMin(round(minval/self._res))
-        self._min = minval
-
-    def SetMax(self, maxval):
-        self._islider.SetMax(round(maxval/self._res))
-        self._max = maxval
-
-    def SetRes(self, res):
-        self._islider.SetRange(round(self._min/res), round(self._max/res))
-        self._islider.SetValue(round(self._value/res))
-        self._res = res
-
-    def SetRange(self, minval, maxval):
-        self._islider.SetRange(round(minval/self._res), round(maxval/self._res))
-        self._min = minval
-        self._max = maxval
-    def UpdateValue(self, e):
-        valor = e.GetEventObject().GetValue()
-        try:
-            valor = float(valor)
-        except:
-            if valor == "":        
-                valor = self.defaultValue
-                
-            else:
-                valor = self.defaultValue
-                e.GetEventObject().SetValue(float(valor))
-            
-        self.SetValue(valor)
 
 class edit_window (wx.Dialog):
+     """
+     Janela de edição de parâmetros do filtro
+     Pode salvar os parâmetros alterados como Default
+     ou se for um preset, altera apenas localmente
+     """
      def __init__(self, window, check, filtro, usando_preset=False):
+        """
+        window: E janela principal (main_window)
+        check: O checkbox do filtro
+        filtro: O filtro
+        usando_preset: Se é edição de preset, True, caso contrário, False
+        """
         super(edit_window, self).__init__(None) 
         self.filtro = filtro
         self.check = check
@@ -127,7 +50,9 @@ class edit_window (wx.Dialog):
         self.preset = usando_preset
      
      def InitUI(self):
-
+        """
+        Inicializa a janela de edição
+        """
         pnl = wx.Panel(self)
         vbox = wx.BoxSizer(wx.VERTICAL)
         sb = wx.StaticBox(pnl, label=u'Parâmetros')
@@ -136,7 +61,6 @@ class edit_window (wx.Dialog):
         i = 0
         self.texts = []
         for nome,tupla in params.items():
-            # (valor_padrao, tipo, (valor_inicial,valor_final))
             panel_parametro = wx.Panel(pnl)
             sizer_parametro = wx.BoxSizer(wx.VERTICAL)
             panel_parametro.SetSizer(sizer_parametro)
@@ -160,35 +84,19 @@ class edit_window (wx.Dialog):
             valor.Bind(wx.EVT_TEXT, slider.UpdateValue)
             sizer_parametro.Add(slider)
             sbs.Add(panel_parametro)
-            """sbs.Add(wx.RadioButton(pnl, label='256 Colors', 
-                style=wx.RB_GROUP))
-            sbs.Add(wx.RadioButton(pnl, label='16 Colors'))
-            sbs.Add(wx.RadioButton(pnl, label='2 Colors'))
-            
-            hbox1 = wx.BoxSizer(wx.HORIZONTAL)        
-            hbox1.Add(wx.RadioButton(pnl, label='Custom'))
-            hbox1.Add(wx.TextCtrl(pnl), flag=wx.LEFT, border=5)
-            sbs.Add(hbox1)
-            """
             i+=1
             
         pnl.SetSizer(sbs)
-       
-       
-       
         hbox2 = wx.BoxSizer(wx.HORIZONTAL)
         okButton = wx.Button(self, label='Salvar')
         closeButton = wx.Button(self, label='Cancelar')
         hbox2.Add(okButton)
         hbox2.Add(closeButton, flag=wx.LEFT, border=5)
-
         vbox.Add(pnl, proportion=1, 
             flag=wx.ALL|wx.EXPAND, border=5)
         vbox.Add(hbox2, 
             flag=wx.ALIGN_CENTER|wx.TOP|wx.BOTTOM, border=10)
-
         self.SetSizer(vbox)
-        
         okButton.Bind(wx.EVT_BUTTON, self.OnSave)
         closeButton.Bind(wx.EVT_BUTTON, self.OnClose)
    
@@ -196,6 +104,9 @@ class edit_window (wx.Dialog):
         self.Destroy()
     
      def OnSave(self, e):
+         """
+         Salva as alterações
+         """
          valores = []
          i = 0
          for texto in self.texts:
@@ -205,8 +116,6 @@ class edit_window (wx.Dialog):
                  valor = float(self.filtro.params.values()[i][0])
              i += 1
              valores.append(valor)
-         #self.window.filters_edicao[self.check].vparams = valores
-         #self.window.filters_edicao[self.check].update_default()
          self.filtro.vparams = valores
          if not self.preset:
              data.salva_defaults(self.window.filters[2])
@@ -215,31 +124,29 @@ class edit_window (wx.Dialog):
 
 # Adaptado de http://eli.thegreenplace.net/files/prog_code/wx_mpl_dynamic_graph.py.txt
 class DataGen(object):
-    """A silly class that generates pseudo-random data for
-        display in the plot.
     """
-    def __init__(self):
-        self.record = sinusoid(pi/4)
-        
-    def __del__(self):
-        #self.player.close()
-        pass
+    Classe que gera uma lista dos valores de um stream
+    """
+    def __init__(self, window):
+        self.window = window
     def next(self):
-        self.last = self.record.take()
-        return self.last
-    
-    def _recalc_data(self):
-       pass
+        if self.window.player is not None:
+            return self.window.player.last_input_output()
 
    
 class main_window(wx.Frame):
+    """
+    Janela principal
+    Modos (Tocando, Editando Preset, Tocando Preset)
+    """
     def __init__(self, *args, **kwargs):
         super(main_window, self).__init__(*args, **kwargs) 
         self.InitUI()
-    """
-    Modos (Tocando, Editando Preset, Tocando Preset)
-    """
+
     def modo_tocando(self):
+        """
+        Arruma a janela para execução sem preset
+        """
         if self.player is not None and not self.player.player.finished:
             self.player.pausar()
         if self.list_edit_filters is not None:
@@ -255,41 +162,40 @@ class main_window(wx.Frame):
         self.menu.Enable(wx.ID_NEW, 1)
         self.menu.Enable(wx.ID_OPEN, 1)
         self.menubar.EnableTop(1, False)
-        
-      #  self.botoes_pause()
-        
-        self.toolbar.EnableTool(wx.ID_STOP, True)
-        self.toolbar.EnableTool(wx.ID_PREVIEW_PREVIOUS, False)
-        self.toolbar.EnableTool(wx.ID_PREVIEW_NEXT, False)
-        self.toolbar.EnableTool(wx.ID_UP, True)
-        self.toolbar.SetToolNormalBitmap(wx.ID_UP ,wx.Bitmap('images/play.png'))
+        self.botoes_pause()
+        #self.toolbar.SetToolNormalBitmap(wx.ID_UP ,wx.Bitmap('images/play.png'))
         
         pass
     def modo_edita_preset(self):
+        """
+        Arruma a janela para edição de preset
+        """
+        self.status = 0
         if self.player is not None and not self.player.player.finished:
+            self.data_input = []
+            self.data_output = []
+            self.on_redraw_graph(None)
             self.player.pausar()
         if self.list_edit_filters is not None:
              self.list_edit_filters.Destroy()
              self.list_edit_filters = None
         self.filtros_aplicados = []
-        self.status = 0
+        
         self.preset_mode = 2
         self.menu.Enable(wx.ID_NEW, 1)
         self.menu.Enable(wx.ID_OPEN, 1)
         self.menubar.EnableTop(1, True)
-        self.menu_preset.Enable(wx.ID_SAVE, True)
+        self.menu.Enable(wx.ID_SAVE, True)
         self.menu_preset.Enable(wx.ID_SETUP, True)
         self.menu_preset.Enable(wx.ID_EDIT, False)
-        
-        self.toolbar.EnableTool(wx.ID_STOP, False)
-        self.toolbar.EnableTool(wx.ID_PREVIEW_PREVIOUS, True)
-        self.toolbar.EnableTool(wx.ID_PREVIEW_NEXT, True)
-        self.toolbar.EnableTool(wx.ID_UP, False)
-        self.toolbar.SetToolNormalBitmap(wx.ID_UP ,wx.Bitmap('images/play.png'))
-        
-
+        self.botoes_pause()
+        self.data_input = []
+        self.data_output = []
 
     def modo_tocando_preset(self):
+        """
+        Arruma a janela para execução de um preset
+        """
         if self.player is not None and not self.player.player.finished:
             self.player.pausar()
         if self.list_edit_filters is not None:
@@ -302,37 +208,39 @@ class main_window(wx.Frame):
         self.menu.Enable(wx.ID_NEW, 1)
         self.menu.Enable(wx.ID_OPEN, 1)
         self.menubar.EnableTop(1, True)
-        self.menu_preset.Enable(wx.ID_SAVE, False)
+        self.menu.Enable(wx.ID_SAVE, False)
         self.menu_preset.Enable(wx.ID_SETUP, False)
         self.menu_preset.Enable(wx.ID_EDIT, True)
         
-        self.toolbar.EnableTool(wx.ID_STOP, True)
-        self.toolbar.EnableTool(wx.ID_PREVIEW_PREVIOUS, True)
-        self.toolbar.EnableTool(wx.ID_PREVIEW_NEXT, True)
-        self.toolbar.EnableTool(wx.ID_UP, True)
-        self.toolbar.SetToolNormalBitmap(wx.ID_UP ,wx.Bitmap('images/play.png'))
-        
-        pass
-    def panel_normal(self, parent):
-        pass
-    def panel_preset (self, parent):
-        pass
+        self.botoes_pause()
+
     def __del__(self):
+        """
+        Termina outros processos rodando
+        """
+        self.status = 0
+        try:
+            self.OnStop(None)
+        except:
+            pass
         if self.player is not None and not self.player.player.finished:
             del self.player
         del self.pedal
-        self.redraw_timer.Stop()
+        del self.timer_graph
+        self.Destroy()
+        
     def OnStartPreset(self ,e):
+        """
+        Começa a tocar um preset
+        """
         self.filters = ([],[],[])
         self.filtros_aplicados = []        
         self.sizer_esquerda.Remove(self.panel_filtros)
         self.panel_filtros.Destroy()
-       # self.panel_filtros.Show(False)
         self.panel_filtros = None
         self.modo_tocando_preset()
         self.panel_preset = wx.Panel(self.panel_esquerda)
         self.sizer_esquerda.Add(self.panel_preset, 1, wx.EXPAND)      
-#        wx.lib.mixins.listctrl.ListCtrlAutoWidthMixin()
         self.lista_preset = wx.ListCtrl(self.panel_preset,style=wx.LC_REPORT)
         
         temp_sizer = wx.BoxSizer(wx.VERTICAL)
@@ -341,7 +249,6 @@ class main_window(wx.Frame):
         self.lista_preset.InsertColumn(0, "Filtros")
         
         temp_sizer.Add(self.lista_preset,1,wx.EXPAND)
-        #self.lista_preset.SetResizeColumn(0)
         self.panel_esquerda.Fit()
         self.sizer_principal.Layout()
         for item in self.preset[0]:
@@ -351,90 +258,136 @@ class main_window(wx.Frame):
         self.pedal = sc.SerialData(func_proximo=lambda: self.OnNext(None),
                                    func_anterior=lambda: self.OnPrevious(None))
         filters.pedal = self.pedal.pedal
+        
+        self.desenha_graficos()
+        self.panel_direita.Update()
+        self.panel_direita.Fit()
+        self.panel_direita.Layout()
+        self.panel_graficos.Fit()
+        self.panel_graficos.Layout()
+        self.panel_graficos.Update()
+        self.sizer_graficos.Layout()
+        self.Layout()
+        self.panel_direita.Update()
+        self.sizer_direita.Layout()
+        self.sizer_principal.Layout()
+        
      
     def OnEditPreset(self, e):
+        """
+        Edita um preset em execução
+        """
         pass
     def OnVoltar(self, e):
+        """
+        Sai da edição/execução de um preset e abre a tela de execução normal
+        """
         if self.preset_mode == 1:
             self.sizer_esquerda.Remove(self.panel_preset)
             self.panel_preset.Destroy()
             self.filter_default_list(self.panel_esquerda,self.sizer_esquerda)
             self.panel_esquerda.Fit()
             self.sizer_principal.Layout()
-            
-           
-        self.modo_tocando()
-        pass
-    def InitUI(self):    
-        # Cria o menu       
-        #self.SetScrollbar(wx.VERTICAL, 0, 16, 50)
-        self.menubar = wx.MenuBar()
-        self.menu = wx.Menu()
-        item1 = self.menu.Append(wx.ID_NEW, "Novo Preset", "Criar novo preset de filtros")
-        item2 = self.menu.Append(wx.ID_OPEN, "Carregar Preset", "Carregar preset de filtros")
-        item3 = self.menu.Append(wx.ID_EXIT, "Sair", "Sair do aplicativo")
-        self.menubar.Append(self.menu , 'Arquivo')
+            self.panel_direita.Fit()
+            self.panel_direita.Layout()
+            self.Layout()
+            self.panel_direita.Update()
+            self.panel_direita.Update()
+            self.sizer_direita.Layout()
+            self.modo_tocando()
+        if self.preset_mode == 2:
+            self.modo_tocando()
+            self.desenha_graficos()
+            self.panel_direita.Update()
+            self.panel_direita.Fit()
+            self.panel_direita.Layout()
+            self.panel_graficos.Fit()
+            self.panel_graficos.Layout()
+            self.panel_graficos.Update()
+            self.sizer_graficos.Layout()
+            self.Layout()
+            self.panel_direita.Update()
+            self.sizer_direita.Layout()
+            self.sizer_principal.Layout()
+        
        
 
+    def InitUI(self):    
+        """
+        Inicia a tela principal no modo de execução normal
+        """
+
+        # Cria o menu com 2 abas: Arquivo e Preset
+        self.Bind(wx.EVT_CLOSE, self.OnQuit)
+        self.menubar = wx.MenuBar()
+        self.menu = wx.Menu()
+        item_novo = self.menu.Append(wx.ID_NEW, "Novo Preset", "Criar novo preset de filtros")
+        item_carregar = self.menu.Append(wx.ID_OPEN, "Carregar Preset", "Carregar preset de filtros")
+        item_salvar = self.menu.Append(wx.ID_SAVE, "Salvar Preset", "Salvar preset de filtros")
+        item_sair = self.menu.Append(wx.ID_EXIT, "Sair", "Sair do aplicativo")
+        self.menubar.Append(self.menu , 'Arquivo')
         self.menu_preset = wx.Menu()
-        item_voltar = self.menu_preset.Append(wx.ID_BACKWARD, "Voltar", "Voltar")   
-        item_salvar = self.menu_preset.Append(wx.ID_SAVE, "Salvar Preset", "Salvar preset de filtros")
-        item_editar = self.menu_preset.Append(wx.ID_EDIT, "Editar Preset", "Editar Preset")
-        item_start = self.menu_preset.Append(wx.ID_SETUP, "Executar Preset", "Executar Preset")
+        item_voltar = self.menu_preset.Append(wx.ID_BACKWARD, "Voltar", "Voltar ao modo de execução normal")   
+        item_editar = self.menu_preset.Append(wx.ID_EDIT, "Editar Preset", "Editar Preset em execução")
+        item_start = self.menu_preset.Append(wx.ID_SETUP, "Executar Preset", "Executar Preset pré-configurado")
         self.menubar.Append(self.menu_preset , 'Preset')
-       
-             
-        
         self.SetMenuBar(self.menubar) 
-        
         self.menubar.EnableTop(1, False)
-        self.Bind(wx.EVT_MENU, self.OnNewPreset, item1)
-        self.Bind(wx.EVT_MENU, self.OnLoadPreset, item2)
-        self.Bind(wx.EVT_MENU, self.OnQuit, item3)
+        
+        self.Bind(wx.EVT_MENU, self.OnNewPreset, item_novo)
+        self.Bind(wx.EVT_MENU, self.OnLoadPreset, item_carregar)
+        self.Bind(wx.EVT_MENU, self.OnQuit, item_sair)
         self.Bind(wx.EVT_MENU, self.OnEditPreset, item_editar)
         self.Bind(wx.EVT_MENU, self.OnSavePreset, item_salvar)
         self.Bind(wx.EVT_MENU, self.OnStartPreset, item_start)
         self.Bind(wx.EVT_MENU, self.OnVoltar, item_voltar)
+        
+        
+        # Variáveis de estado
+        
         # Status do player 0-Parado,1-Tocando,2-Pausado
         self.status = 0      
-        
         # Status do uso do preset. 0-sem usar, 1-Tocando Preset, 2-Editando preset
         self.preset_mode = 0
         # Preset = lista de lista de filtros
         self.preset = []
-      
-        # Cria  barra de menus (play/pause/next/previous)
-        
+        # Lista (ListBox) com o preset editado
         self.list_edit_filters = None
-        # Cria os panels que contem os filtros
-       # self.panel_principal = wx.Panel(self, -1)
-      #  wx.lib.scrolledpanel   
-        self.panel_principal = wx.ScrolledWindow(self,-1)
-        self.panel_principal.SetScrollbars(1,1,1,1)
-        self.panel_principal.SetBackgroundColour("#666666")
-        self.sizer_principal = wx.BoxSizer(wx.HORIZONTAL)
-       
-        self.panel_esquerda = wx.Panel(self.panel_principal)
-        self.panel_esquerda.SetBackgroundColour('#333333')
-     
-        self.sizer_esquerda = wx.BoxSizer(wx.VERTICAL)
-        self.sizer_direita = wx.BoxSizer(wx.VERTICAL)
-        #self.sizer_principal.Set
-        self.panel_esquerda.SetSizer(self.sizer_esquerda)
-        self.panel_direita = wx.Panel(self.panel_principal,size=(320,0))
-        self.panel_direita.SetSizer(self.sizer_direita)
-        self.panel_direita.SetBackgroundColour('#333333')
-        self.sizer_principal.Add(self.panel_esquerda, 1, wx.EXPAND | wx.ALL, 7)      
-        self.sizer_principal.Add(self.panel_direita, 0, wx.EXPAND | wx.ALL, 0)    
-        self.panel_principal.SetSizer(self.sizer_principal)
-     
-       # tool = self.CreateToolBar()
-      #  tool.Realize()
-        self.toolbar =  wx.ToolBar(self.panel_direita, style=wx.NO_BORDER) 
         
-        #self.toolbar.SetBackgroundColour("#ffffff")
-        self.toolbar.SetMinSize((320,60))
-        #self.toolbar.SetSize((320,0))
+        # Tempo de refresh do gráfico em ms
+        self.graph_refresh_time = 5
+        self.pausa_grafico = False
+        
+        # Cria o panel e sizer principal
+        self.panel_principal = wx.ScrolledWindow(self,-1)
+        self.panel_principal.SetScrollbars(1,1,1,1) 
+        self.panel_principal.SetBackgroundColour("#444444")
+        self.sizer_principal = wx.BoxSizer(wx.HORIZONTAL)
+        self.panel_principal.SetSizer(self.sizer_principal)
+        
+        
+        # Panel/Sizer Esquerda (filtros/preset execução)        
+        self.panel_esquerda = wx.Panel(self.panel_principal)
+        self.panel_esquerda.SetBackgroundColour('#444444')
+        self.sizer_esquerda = wx.BoxSizer(wx.VERTICAL)
+        self.panel_esquerda.SetSizer(self.sizer_esquerda)
+        self.sizer_principal.Add(self.panel_esquerda, 1, wx.EXPAND | wx.ALL, 25)  
+        
+        # ------------------ #
+        #    PANEL DIREITA   #
+        # -----------------  #
+        
+        # Panel/Sizer direita (gráfico/botões/preset edição)
+        self.panel_direita = wx.Panel(self.panel_principal,size=(320,0))    
+        self.panel_direita.SetBackgroundColour('#333333')
+        self.sizer_direita = wx.BoxSizer(wx.VERTICAL)
+        self.panel_direita.SetSizer(self.sizer_direita)
+        self.sizer_principal.Add(self.panel_direita, 0, wx.EXPAND | wx.ALL, 0)  
+
+
+        # Cria os botões play/pause/stop/next/previous
+        self.toolbar =  wx.ToolBar(self.panel_direita, style=wx.NO_BORDER) 
+        self.toolbar.SetMinSize((320,65))
         self.sizer_direita.Add(self.toolbar, 0, wx.EXPAND | wx.BOTTOM, 5)
         self.toolbar.AddSeparator()        
         self.toolbar.AddSeparator() 
@@ -443,164 +396,240 @@ class main_window(wx.Frame):
         self.toolbar.AddSeparator() 
         self.toolbar.AddSeparator() 
         previous = self.toolbar.AddLabelTool(wx.ID_PREVIEW_PREVIOUS,'Previous', wx.Bitmap('images/previous.png'))
-        
         stop = self.toolbar.AddLabelTool(wx.ID_STOP,'Stop', wx.Bitmap('images/stop.png'))
-
         play = self.toolbar.AddLabelTool(wx.ID_UP,'Play/Pause', wx.Bitmap('images/play.png'))
-
         nextt = self.toolbar.AddLabelTool(wx.ID_PREVIEW_NEXT,'Next', wx.Bitmap('images/next.png'))     
-        
         self.toolbar.Realize()
         self.Bind(wx.EVT_TOOL, self.OnPlayPause, play)
         self.Bind(wx.EVT_TOOL, self.OnStop, stop)
         self.Bind(wx.EVT_TOOL, self.OnPrevious, previous)
         self.Bind(wx.EVT_TOOL, self.OnNext, nextt)
-        titulo = wx.Font(13, wx.DEFAULT, wx.NORMAL, wx.BOLD)
+        
+        
         line = wx.StaticLine(self.panel_direita, size=(320,2), style=wx.LI_HORIZONTAL)
         self.sizer_direita.Add(line,0,border=0)
-        self.panel_graficos = wx.Panel(self.panel_direita, size=(320,0))
-        self.sizer_graficos = wx.BoxSizer(wx.VERTICAL)
-        txt = wx.StaticText(self.panel_graficos, label=u"Entrada")
-        txt.SetFont(titulo)
-        txt.SetForegroundColour("#FFFFFF")
-        self.panel_graficos.SetSizer(self.sizer_graficos)        
-        self.sizer_graficos.Add(txt,0, wx.LEFT, 10)
         
-        self.sizer_direita.Add(self.panel_graficos,0,wx.EXPAND | wx.TOP | wx.BOTTOM, 5)
+        self.desenha_graficos()
         
-        grafico_entrada = self.create_graph(self.panel_graficos,self.sizer_graficos)
-        txt2 = wx.StaticText(self.panel_graficos, label=u"Saída")
-        txt2.SetFont(titulo)
-        txt2.SetForegroundColour("#FFFFFF")       
-        self.sizer_graficos.Add(txt2,0, wx.LEFT, 10)
-        line2 = wx.StaticLine(self.panel_direita, size=(320,2), style=wx.LI_HORIZONTAL)
-        self.sizer_direita.Add(line2,0,border=0)
-     
+       
+        
+        
         # Variáveis relacionadas ao filtro
      
-     
-     
-     
-     
-        #Uma tupla formada por 3 listas (check,edita,filtro)
+        # Uma tupla formada por 3 listas (check,botão edita,filtro)
         self.filters = ([],[],[])
+        # Filtros aplicados no momento (execução normal)
         self.filtros_aplicados = []
+        # player da classe Player
         self.player = None
-        
+        # Variável com a leitura Serial
+        self.pedal = None
+         
          
         self.filter_default_list(self.panel_esquerda, self.sizer_esquerda)
         self.modo_tocando()
         
         self.Show(True)    
         self.Maximize()
+    def desenha_graficos(self):
+        titulo = wx.Font(13, wx.DEFAULT, wx.NORMAL, wx.BOLD)
+        
+        # Panel/Sizer gráficos
+        self.panel_graficos = wx.Panel(self.panel_direita, size=(320,0))
+        self.sizer_graficos = wx.BoxSizer(wx.VERTICAL)
+        self.panel_graficos.SetSizer(self.sizer_graficos)  
+        # Entrada        
+        txt = wx.StaticText(self.panel_graficos, label=u"Entrada")
+        txt.SetFont(titulo)
+        txt.SetForegroundColour("#FFFFFF")
+        self.sizer_graficos.Add(txt,0, wx.LEFT, 10)
+        self.timer_graph = self.create_input_graph(self.panel_graficos,self.sizer_graficos)
+        
+        
+        # Saída
+        txt2 = wx.StaticText(self.panel_graficos, label=u"Saída")
+        txt2.SetFont(titulo)
+        txt2.SetForegroundColour("#FFFFFF")       
+        self.sizer_graficos.Add(txt2,0, wx.LEFT, 10)
+        self.create_output_graph(self.panel_graficos,self.sizer_graficos, self.timer_graph)        
+        self.sizer_direita.Add(self.panel_graficos,0,wx.EXPAND | wx.TOP | wx.BOTTOM, 5)
+        
+        
+        line2 = wx.StaticLine(self.panel_graficos, size=(320,2), style=wx.LI_HORIZONTAL)
+        self.sizer_graficos.Add(line2,0,border=0)
+        
+    # Funções create_input_graph, create_output_graph e on_redraw_graph
+    # Adaptadas de http://eli.thegreenplace.net/files/prog_code/wx_mpl_dynamic_graph.py.txt 
+    def create_output_graph(self, parent, sizer, timer):
+        """
+        Função que cria um gráfico que imprime a saída
+        """
+        graph_panel = wx.Panel(parent, size=(320,0))
+        self.data_output = []
+        dpi = 160
+        fig = Figure((2.0, 1.0), dpi=dpi)
+        self.axes_output = fig.add_subplot(111)
+        fig.add_subplot()
+        fig.subplots_adjust(bottom=0.009,left=0.003,right=0.997, top=0.991)
+        self.axes_output.set_axis_bgcolor('black')
+        pylab.setp(self.axes_output.get_xticklabels(), fontsize=4)
+        pylab.setp(self.axes_output.get_yticklabels(), fontsize=4)        
+        self.plot_data_output = self.axes_output.plot(self.data_output, 
+            linewidth=1,
+            color=(0, 0, 1),
+            )[0] 
+        self.axes_output.grid(True, color='gray')
+        self.canvas_output = FigCanvas(graph_panel, -1, fig)        
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        vbox.Add(self.canvas_output, 0)        
+        graph_panel.SetSizer(vbox)
+        sizer.Add(graph_panel, 0, wx.TOP | wx.BOTTOM, 5)
+        self.axes_output.set_xbound(lower=0, upper=100)
+        self.axes_output.set_ybound(lower=-1.0, upper=1.0)
+        self.Bind(wx.EVT_TIMER, self.on_redraw_graph, timer)        
+        #self.redraw_timer_output.Start(self.graph_refresh_time)
+    
+    def create_input_graph(self, parent, sizer):
+        """
+        Função que cria um gráfico que imprime a entrada
+        Retorna um timer que inicia a impressão
+        """
+        graph_panel = wx.Panel(parent, size=(320,0))
+        self.input_data_generator = DataGen(self)
+        self.data_input = []
+        dpi = 160
+        fig = Figure((2.0, 1.0), dpi=dpi)
+        self.axes_input = fig.add_subplot(111)
+        fig.add_subplot()
+        fig.subplots_adjust(bottom=0.009,left=0.003,right=0.997, top=0.991)
+        self.axes_input.set_axis_bgcolor('black')
+        pylab.setp(self.axes_input.get_xticklabels(), fontsize=4)
+        pylab.setp(self.axes_input.get_yticklabels(), fontsize=4)        
+        self.plot_data_input = self.axes_input.plot(self.data_input, 
+            linewidth=1,
+            color=(1, 0, 0),
+            )[0] 
+        self.axes_input.grid(True, color='gray')
+        self.canvas_input = FigCanvas(graph_panel, -1, fig)        
+        vbox = wx.BoxSizer(wx.VERTICAL)
+        vbox.Add(self.canvas_input, 0)        
+        graph_panel.SetSizer(vbox)
+        sizer.Add(graph_panel, 0, wx.TOP | wx.BOTTOM, 5)
+        self.axes_input.set_xbound(lower=0, upper=100)
+        self.axes_input.set_ybound(lower=-1.0, upper=1.0)
+        redraw_timer_input = wx.Timer(self)
+        #self.Bind(wx.EVT_TIMER, self.on_redraw_graph, on_redraw_graph)        
+        
+        #self.redraw_timer_input.Start(self.graph_refresh_time)
+        return redraw_timer_input
+    def on_redraw_graph(self, event):
+        """
+        Função que vai redesenhando o gráfico
+        """
+        if self.status != 1:
+            self.plot_data_input.set_xdata(np.arange(len(self.data_input)))
+            self.plot_data_input.set_ydata(np.array(self.data_input))
+            self.plot_data_output.set_xdata(np.arange(len(self.data_output)))
+            self.plot_data_output.set_ydata(np.array(self.data_output))
+            self.canvas_input.draw()
+            self.canvas_output.draw()
+            self.timer_graph.Stop()
+            return
+            
+        tupla = self.input_data_generator.next()
+        self.data_input.append(tupla[0])
+        xmax_in = len(self.data_input) if len(self.data_input) > 100 else 100
+        xmin_in = xmax_in - 100       
+        size = round(max(abs(max(self.data_input)),abs(min(self.data_input))),2)
+        ymax_in = size*1.1
+        ymin_in = size*(-1.1)     
+        if size == 0.00:
+            ymax_in = 1.0
+            ymin_in = -1.0
+        
+        self.data_output.append(tupla[1])
+        xmax_out = len(self.data_output) if len(self.data_output) > 100 else 100
+        xmin_out = xmax_out - 100       
+        size2 = round(max(abs(max(self.data_output)),abs(min(self.data_output))),2)
+        ymax_out = size2*1.1
+        ymin_out = size2*(-1.1)      
+        if size2 == 0.00:
+            ymax_out = 1.0
+            ymin_out = -1.0
+        #self.draw_plot()    
+       
+        self.axes_input.set_xbound(lower=xmin_in, upper=xmax_in)
+        self.axes_input.set_ybound(lower=ymin_in, upper=ymax_in)
+        self.plot_data_input.set_xdata(np.arange(len(self.data_input)))
+        self.plot_data_input.set_ydata(np.array(self.data_input))
+        
+        
+        self.axes_output.set_xbound(lower=xmin_out, upper=xmax_out)
+        self.axes_output.set_ybound(lower=ymin_out, upper=ymax_out)
+        self.plot_data_output.set_xdata(np.arange(len(self.data_output)))
+        self.plot_data_output.set_ydata(np.array(self.data_output))
+        
+        self.canvas_input.draw()
+        self.canvas_output.draw()
+       
         
    
-        
-    def create_graph(self, parent, sizer):
-        graph_panel = wx.Panel(parent, size=(320,0))
-        self.datagen = DataGen()
-        self.data = [self.datagen.next()]
-        self.dpi = 160
-        self.fig = Figure((2.0, 1.0), dpi=self.dpi)
-        self.axes = self.fig.add_subplot(111)
-        self.fig.add_subplot()
-        self.fig.subplots_adjust(bottom=0.009,left=0.003,right=0.993, top=0.991)
-        self.axes.set_axis_bgcolor('black')
-        #self.axes.set_axis_off()
-        pylab.setp(self.axes.get_xticklabels(), fontsize=4)
-        pylab.setp(self.axes.get_yticklabels(), fontsize=4)        
-        #self.axes("off")
-        # plot the data as a line series, and save the reference 
-        # to the plotted line series
-        #
-        self.plot_data = self.axes.plot(
-            self.data, 
-            linewidth=1,
-            color=(1, 1, 0),
-            )[0] 
-
-        self.canvas = FigCanvas(graph_panel, -1, self.fig)        
-        self.vbox = wx.BoxSizer(wx.VERTICAL)
-        self.vbox.Add(self.canvas, 0)        
-        graph_panel.SetSizer(self.vbox)
-        sizer.Add(graph_panel, 0, wx.TOP | wx.BOTTOM, 5)
-        self.axes.set_xbound(lower=0, upper=100)
-        self.axes.set_ybound(lower=-1.0, upper=1.0)
-        
-       
-        self.redraw_timer = wx.Timer(self)
-        self.Bind(wx.EVT_TIMER, self.on_redraw_timer, self.redraw_timer)        
-        self.redraw_timer.Start(50)
-
-        return graph_panel
-    def draw_plot(self):
-        xmax = len(self.data) if len(self.data) > 50 else 50
-        xmin = xmax - 50        
-        ymin = round(min(self.data), 0) - 0.1
-        ymax = round(max(self.data), 0) + 0.1
-        self.axes.set_xbound(lower=xmin, upper=xmax)
-        self.axes.set_ybound(lower=ymin, upper=ymax)
-        self.plot_data.set_xdata(np.arange(len(self.data)))
-        self.plot_data.set_ydata(np.array(self.data))
-        self.canvas.draw()
-        
-    def on_redraw_timer(self, event):
-        # if paused do not add data, but still redraw the plot
-        # (to respond to scale modifications, grid change, etc.)
-        #
-        
-        self.data.append(self.datagen.next())
-        
-        self.draw_plot()
     
     def botoes_pause(self):
-                
+        """
+        Coloca os botões (Play/Pause/Stop/Next/Previous)
+        no estado de pausa (depende do preset_mode)
+        """        
         if self.preset_mode == 0:
-            self.toolbar.EnableTool(wx.ID_STOP,True)
+            self.toolbar.EnableTool(wx.ID_UP,True)
+            self.toolbar.EnableTool(wx.ID_STOP,True)  
             self.toolbar.EnableTool(wx.ID_PREVIEW_PREVIOUS,False)
             self.toolbar.EnableTool(wx.ID_PREVIEW_NEXT,False)
        
         if self.preset_mode == 1:
-            self.toolbar.EnableTool(wx.ID_STOP,True)
+            self.toolbar.EnableTool(wx.ID_UP,True)
+            self.toolbar.EnableTool(wx.ID_STOP,True)  
             self.toolbar.EnableTool(wx.ID_PREVIEW_PREVIOUS,True)
             self.toolbar.EnableTool(wx.ID_PREVIEW_NEXT,True)   
-
-        self.toolbar.EnableTool(wx.ID_UP,True)    
+        if self.preset_mode == 2:
+            self.toolbar.EnableTool(wx.ID_PREVIEW_PREVIOUS, True)
+            self.toolbar.EnableTool(wx.ID_PREVIEW_NEXT, True)
+            self.toolbar.EnableTool(wx.ID_UP, False)
+            self.toolbar.EnableTool(wx.ID_STOP,False)  
         self.toolbar.SetToolNormalBitmap(wx.ID_UP ,wx.Bitmap('images/play.png'))
     
     def botoes_play(self):
+        """
+        Coloca os botões (Play/Pause/Stop/Next/Previous) no estado de executando
+        no estado de pausa (depende do preset_mode)
+        """  
         if self.preset_mode == 0:
-            self.toolbar.EnableTool(wx.ID_STOP, True)
             self.toolbar.EnableTool(wx.ID_PREVIEW_PREVIOUS, False)
             self.toolbar.EnableTool(wx.ID_PREVIEW_NEXT, False)
         if self.preset_mode == 1:
-            self.toolbar.EnableTool(wx.ID_STOP, True)
             self.toolbar.EnableTool(wx.ID_PREVIEW_PREVIOUS, True)
             self.toolbar.EnableTool(wx.ID_PREVIEW_NEXT, True)
-        
+        self.toolbar.EnableTool(wx.ID_STOP, True)        
         self.toolbar.EnableTool(wx.ID_UP,True)  
         self.toolbar.SetToolNormalBitmap(wx.ID_UP ,wx.Bitmap('images/pause.png'))
         
-    def botoes_edit_preset(self):
-        self.toolbar.EnableTool(wx.ID_STOP, True)
-        self.toolbar.EnableTool(wx.ID_PREVIEW_PREVIOUS, True)
-        self.toolbar.EnableTool(wx.ID_PREVIEW_NEXT, True)
-        self.toolbar.EnableTool(wx.ID_UP, False)
-        self.toolbar.SetToolNormalBitmap(wx.ID_UP ,wx.Bitmap('images/play.png'))
-        
     def OnQuit(self, e):
-        if self.player is not None and not self.player.player.finished:
-            self.player.pausar()
+        self.__del__()
     
     def OnPlayPause (self, e):
-        if self.preset_mode == 0: # Reproduzindo sem preset
+        """
+        Evento ao apertar play/pause
+        """
+        if self.preset_mode == 0: # Reproduzindo SEM preset
             if self.status == 0:
                 # Começa a tocar            
                 self.player = player.Player(self.filtros_aplicados)
                 self.botoes_play()
                 self.status = 1
+                self.timer_graph.Start(self.graph_refresh_time)
             elif self.status == 1:
                 # Pausa
+                self.timer_graph.Stop()
                 self.player.pausar()
                 self.botoes_pause()
                 self.status = 2
@@ -609,13 +638,15 @@ class main_window(wx.Frame):
                 self.player.tocar()
                 self.botoes_play()
                 self.status = 1
-        if self.preset_mode == 1: # Reproduzindo um preset
+                self.timer_graph.Start(self.graph_refresh_time)
+        if self.preset_mode == 1: # Reproduzindo COM preset
             
             if self.status == 0:
                 # Começa a tocar   
                 self.player = player.Player(tuple(self.preset))
                 self.botoes_play()
                 self.status = 1
+                self.timer_graph.Start(self.graph_refresh_time)
             elif self.status == 1:
                 # Pausa
                 self.player.pausar()
@@ -626,30 +657,40 @@ class main_window(wx.Frame):
                 self.player.tocar()
                 self.botoes_play()
                 self.status = 1
+                self.timer_graph.Start(self.graph_refresh_time)
        
     def OnStop (self, e):
+        """
+        Evento de parada
+        """
         if self.preset_mode == 0:
+            self.data_input = []
+            self.data_output = []
+            self.status = 0
             if self.player is not None:
                 self.player.pausar()
             self.botoes_pause()
-            self.status = 0
+            
         
         if self.preset_mode == 1:
+            self.data_input = []
+            self.data_output = []
+            self.status = 0
             if self.player is not None:
                 self.player.pausar()
             self.botoes_pause()
-            self.status = 0
-            
+
+        self.on_redraw_graph(None)
     def OnNext (self, e):
         """
         Função que muda para o próximo filtro do preset atual
         """        
-        if self.preset_mode == 1: #Tocando
+        if self.preset_mode == 1: # Tocando
             self.player.next_filter()
             self.lista_preset.DeleteAllItems()
             for filt in self.player.filtros[self.player.posicao]:
                 self.lista_preset.InsertStringItem(sys.maxint, filt.name)
-        elif self.preset_mode == 2: #Editando
+        elif self.preset_mode == 2: # Editando
             atual = int(self.list_edit_filters.GetItems()[int(self.list_edit_filters.GetSelection())])
             atual+=1
             if atual >= len(self.list_edit_filters.GetItems()):
@@ -677,6 +718,10 @@ class main_window(wx.Frame):
             self.mostra_lista_filtro(self.get_edit_list_selection())
         
     def mostra_lista_filtro(self, lista):
+        """
+        Na edição de filtros, mostra os filtros da posição
+        atual do preset
+        """
         for i in range(len(self.filters[0])): 
             self.filters[0][i].SetValue(False)
             self.filters[1][i].Enable(False)  
@@ -686,11 +731,11 @@ class main_window(wx.Frame):
                     self.filters[0][i].SetValue(True)
                     self.filters[1][i].Enable(True)  
                     break
-                    
-    def salva_lista_filtro(self, lista):
-        pass
-    
+                        
     def get_edit_list_selection(self):
+        """
+        Retorna a lista com a posição atual do preset
+        """
         if self.preset_mode == 2:
             sel = self.list_edit_filters.GetSelection()
             lista = []
@@ -702,6 +747,7 @@ class main_window(wx.Frame):
             sel = int(self.list_edit_filters.GetItems()[sel])
             lista = self.preset[sel]
             return lista
+            
     def OnClick(self, e):
         """
         Onclick da edição de preset
@@ -709,7 +755,10 @@ class main_window(wx.Frame):
         self.mostra_lista_filtro(self.get_edit_list_selection())
             
     def filter_list_box (self, parent, sizer, preset):
-         self.list_edit_filters = wx.ListBox(parent, -1, size=(320,200))
+         """
+         Cria a ListBox para edição de preset
+         """
+         self.list_edit_filters = wx.ListBox(parent, -1, size=(320,400))
          sizer.Add(self.list_edit_filters, 0)
          self.toolbar.Realize()
          self.Bind(wx.EVT_LISTBOX, self.OnClick)
@@ -717,12 +766,31 @@ class main_window(wx.Frame):
              self.list_edit_filters.Append(str(i))
              
     def OnNewPreset(self, e):
+         """
+         Função para criar novo preset
+         """
          self.modo_edita_preset()         
          self.preset = [[]]
          self.filter_list_box(self.panel_direita, self.sizer_direita, self.preset)
          self.list_edit_filters.SetSelection(0)
          self.mostra_lista_filtro([])
+
+         
+         try:
+            self.panel_graficos.Destroy()
+         except:
+            pass
+         self.panel_direita.Fit()
+         self.panel_direita.Layout()
+         self.Layout()
+         self.panel_direita.Update()
+         self.panel_direita.Update()
+         self.sizer_direita.Layout()
+          
     def OnSavePreset(self, e):
+        """
+        Salva o preset atual em um arquivo
+        """
         openFileDialog = wx.FileDialog(self, "Digite o nome do arquivo para salvar o seu preset", "", "",
                                        "Arquivos de Preset (*.preset)|*.preset", wx.FD_SAVE)
         if openFileDialog.ShowModal() == wx.ID_CANCEL:
@@ -731,6 +799,9 @@ class main_window(wx.Frame):
         data.save_preset(openFileDialog.GetPath(), self.preset)
             
     def OnLoadPreset(self, e):
+        """
+        Carrega um preset para edição
+        """
         # Abre a janela perguntando o arquivo        
         openFileDialog = wx.FileDialog(self, "Digite o nome do arquivo para carregar o seu preset", "", "",
                                        "Arquivos de Preset (*.preset)|*.preset", wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
@@ -743,29 +814,52 @@ class main_window(wx.Frame):
         self.list_edit_filters.SetSelection(0)
         self.mostra_lista_filtro(self.preset[0])
         
+        try:
+            self.panel_graficos.Destroy()
+        except:
+            pass
+        self.panel_direita.Fit()
+        self.panel_direita.Layout()
+        self.Layout()
+        self.panel_direita.Update()
+        self.panel_direita.Update()
+        self.sizer_direita.Layout()
+       
+        
     
     def filter_default_list(self, panel, sizer):
         """
-        Cria as listas de filtros padrão com checkbox e 
+        Cria as listas de filtros padrão com checkbox e botão de edição
         """
         self.panel_filtros = wx.Panel(panel)
-        sizer.Add(self.panel_filtros,1, wx.EXPAND | wx.ALL,1)
+        self.panel_filtros.SetBackgroundColour("#666666")
+        sizer.Add(self.panel_filtros,1, wx.EXPAND)
         box_esquerda = wx.BoxSizer(wx.VERTICAL)
         lista_filtros = filters.Filtro.filtros
         i = 0;
         for name,funcs in lista_filtros.items():
-            if i % 2 == 0:            
+            if i % 2 == 0:  
+                
                 panel_de_dois = wx.Panel(self.panel_filtros)
-                panel_de_dois.SetBackgroundColour("#EEEEEE")
+                panel_de_dois.SetBackgroundColour("#666666")
                 sizer_de_dois = wx.BoxSizer(wx.HORIZONTAL)
-                box_esquerda.Add(panel_de_dois, 1, wx.EXPAND | wx.ALL, 10)  
+                if i == 0:
+                    box_esquerda.Add(panel_de_dois, 1, wx.EXPAND | wx.TOP | wx.BOTTOM, 8) 
+                else:
+                    box_esquerda.Add(panel_de_dois, 1, wx.EXPAND | wx.BOTTOM, 8)  
                 panel_de_dois.SetSizer(sizer_de_dois)
             panelTemp = wx.Panel(panel_de_dois)
-            panelTemp.SetBackgroundColour("#CCCCCC")
-            sizer_de_dois.Add(panelTemp, 1, wx.EXPAND | wx.RIGHT, wx.LEFT, 5)
+            panelTemp.SetBackgroundColour("#DDDDDD")
+            if i % 2 == 0:
+                sizer_de_dois.Add(panelTemp, 1, wx.EXPAND | wx.LEFT | wx.RIGHT, 8)
+            else:
+                sizer_de_dois.Add(panelTemp, 1, wx.EXPAND |  wx.RIGHT, 8)
             sizer_filtros = wx.BoxSizer(wx.VERTICAL)
+            titulo = wx.Font(14, wx.DEFAULT, wx.NORMAL, wx.NORMAL, False)
             label_lista = wx.StaticText(panelTemp, label=name)
-            sizer_filtros.Add(label_lista, 0, wx.EXPAND | wx.LEFT | wx.TOP, 5)
+            label_lista.SetFont(titulo)
+            label_lista.SetForegroundColour("#111111")
+            sizer_filtros.Add(label_lista, 0, wx.EXPAND | wx.ALL, 10)
             panelTemp.SetSizer(sizer_filtros)
             for func in funcs:
                 filtro = func()
@@ -814,13 +908,20 @@ class main_window(wx.Frame):
             janela.Destroy() 
     
     def check_filter(self, e):
+        """
+        Evento do checkbox dos filtros
+        """
         obj = e.GetEventObject()
         ind = self.filters[0].index(obj)
         if self.preset_mode == 0:
+            
             if obj.GetValue():
                 self.filtros_aplicados.append(self.filters[2][ind])
             else:
                 self.filtros_aplicados.remove(self.filters[2][ind])
+            if self.status == 1:
+                self.OnPlayPause(None)
+                self.OnPlayPause(None)
         elif self.preset_mode == 2: # Editando
             if obj.GetValue():
                 novo_filtro = copy.deepcopy(self.filters[2][ind])
@@ -837,23 +938,12 @@ class main_window(wx.Frame):
 
 def create_main_window():
     """
-    Function that creates the main window of the Digital Pedalboard program
+    Função que cria a janela principal e instancia
+    tudo que é necessario para iniciar o programa
     """  
     app = wx.App()
     window = main_window(None,title="Digital Pedalboard",name="main_window")
     app.MainLoop()
     return window
-
-
-    
-def settings_window():
-    pass
-
-
-def filter_window():
-    """
-    Open a popup to show filter settings
-    """
-    pass
 
 window = create_main_window()
