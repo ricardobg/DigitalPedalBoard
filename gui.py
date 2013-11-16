@@ -19,6 +19,19 @@ class AutoWidthListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin):
     def OnResize(self, event):
         pass
 #import numpy
+        
+        
+import matplotlib
+matplotlib.use('WXAgg')
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_wxagg import \
+    FigureCanvasWxAgg as FigCanvas, \
+    NavigationToolbar2WxAgg as NavigationToolbar
+import numpy as np
+import pylab
+import pprint
+from audiolazy import *
+
 
 # Adaptado de http://stackoverflow.com/questions/4709087/wxslider-with-floating-point-values
 class FloatSlider(wx.Slider):
@@ -198,7 +211,27 @@ class edit_window (wx.Dialog):
          if not self.preset:
              data.salva_defaults(self.window.filters[2])
          self.Destroy()
+
+
+# Adaptado de http://eli.thegreenplace.net/files/prog_code/wx_mpl_dynamic_graph.py.txt
+class DataGen(object):
+    """A silly class that generates pseudo-random data for
+        display in the plot.
+    """
+    def __init__(self):
+        self.record = sinusoid(pi/4)
+        
+    def __del__(self):
+        #self.player.close()
+        pass
+    def next(self):
+        self.last = self.record.take()
+        return self.last
     
+    def _recalc_data(self):
+       pass
+
+   
 class main_window(wx.Frame):
     def __init__(self, *args, **kwargs):
         super(main_window, self).__init__(*args, **kwargs) 
@@ -288,6 +321,7 @@ class main_window(wx.Frame):
         if self.player is not None and not self.player.player.finished:
             del self.player
         del self.pedal
+        self.redraw_timer.Stop()
     def OnStartPreset(self ,e):
         self.filters = ([],[],[])
         self.filtros_aplicados = []        
@@ -370,67 +404,84 @@ class main_window(wx.Frame):
         self.preset = []
       
         # Cria  barra de menus (play/pause/next/previous)
-        """
-        self.toolbar = self.CreateToolBar()
-        previous = self.toolbar.AddLabelTool(wx.ID_PREVIEW_PREVIOUS,'Previous', wx.Bitmap('images/previous.png'))
-        stop = self.toolbar.AddLabelTool(wx.ID_STOP,'Stop', wx.Bitmap('images/stop.png'))
-        play = self.toolbar.AddLabelTool(wx.ID_UP,'Play/Pause', wx.Bitmap('images/play.png'))
-        nextt = self.toolbar.AddLabelTool(wx.ID_PREVIEW_NEXT,'Next', wx.Bitmap('images/next.png'))
-        self.toolbar.Realize()
-        self.Bind(wx.EVT_TOOL, self.OnPlayPause, play)
-        self.Bind(wx.EVT_TOOL, self.OnStop, stop)
-        self.Bind(wx.EVT_TOOL, self.OnPrevious, previous)
-        self.Bind(wx.EVT_TOOL, self.OnNext, nextt)
-       
-       
-        """
         
-        
-
         self.list_edit_filters = None
         # Cria os panels que contem os filtros
        # self.panel_principal = wx.Panel(self, -1)
       #  wx.lib.scrolledpanel   
         self.panel_principal = wx.ScrolledWindow(self,-1)
-        self.panel_principal.SetScrollbars(1,1,1000,1000)
-        self.panel_principal.SetBackgroundColour("#4f5049")
+        self.panel_principal.SetScrollbars(1,1,1,1)
+        self.panel_principal.SetBackgroundColour("#666666")
         self.sizer_principal = wx.BoxSizer(wx.HORIZONTAL)
        
         self.panel_esquerda = wx.Panel(self.panel_principal)
-        self.panel_esquerda.SetBackgroundColour('#ffffff')
+        self.panel_esquerda.SetBackgroundColour('#333333')
      
         self.sizer_esquerda = wx.BoxSizer(wx.VERTICAL)
         self.sizer_direita = wx.BoxSizer(wx.VERTICAL)
-
-        self.panel_esquerda.SetSizerAndFit(self.sizer_esquerda)
+        #self.sizer_principal.Set
+        self.panel_esquerda.SetSizer(self.sizer_esquerda)
         self.panel_direita = wx.Panel(self.panel_principal,size=(320,0))
-        #self.panel_direita.SetSizer(self.sizer_direita)
-        self.panel_direita.SetBackgroundColour('#000000')
+        self.panel_direita.SetSizer(self.sizer_direita)
+        self.panel_direita.SetBackgroundColour('#333333')
         self.sizer_principal.Add(self.panel_esquerda, 1, wx.EXPAND | wx.ALL, 7)      
-        self.sizer_principal.Add(self.panel_direita, 0, wx.EXPAND | wx.ALL, 7)    
+        self.sizer_principal.Add(self.panel_direita, 0, wx.EXPAND | wx.ALL, 0)    
         self.panel_principal.SetSizer(self.sizer_principal)
+     
+       # tool = self.CreateToolBar()
+      #  tool.Realize()
+        self.toolbar =  wx.ToolBar(self.panel_direita, style=wx.NO_BORDER) 
         
-        # Botões no panel_direita
-        self.panel_botoes = wx.Panel(self.panel_direita, size=(260,60))
-        self.sizer_botoes = wx.BoxSizer(wx.HORIZONTAL)
-        self.sizer_direita.Add(self.panel_botoes, 0, wx.EXPAND | wx.ALL, 2)
-                
+        #self.toolbar.SetBackgroundColour("#ffffff")
+        self.toolbar.SetMinSize((320,60))
+        #self.toolbar.SetSize((320,0))
+        self.sizer_direita.Add(self.toolbar, 0, wx.EXPAND | wx.BOTTOM, 5)
+        self.toolbar.AddSeparator()        
+        self.toolbar.AddSeparator() 
+        self.toolbar.AddSeparator()        
+        self.toolbar.AddSeparator()        
+        self.toolbar.AddSeparator() 
+        self.toolbar.AddSeparator() 
+        previous = self.toolbar.AddLabelTool(wx.ID_PREVIEW_PREVIOUS,'Previous', wx.Bitmap('images/previous.png'))
         
-        previous = wx.BitmapButton(self.panel_botoes, bitmap=wx.Bitmap('images/previous.png'))
-        stop = wx.BitmapButton(self.panel_botoes, bitmap=wx.Bitmap('images/stop.png'))
-        play= wx.BitmapButton(self.panel_botoes, bitmap=wx.Bitmap('images/play.png'))
-        nextt = wx.BitmapButton(self.panel_botoes, bitmap=wx.Bitmap('images/next.png'))
+        stop = self.toolbar.AddLabelTool(wx.ID_STOP,'Stop', wx.Bitmap('images/stop.png'))
 
-        self.Bind(wx.EVT_BUTTON, self.OnPlayPause, play)
-        self.Bind(wx.EVT_BUTTON, self.OnStop, stop)
-        self.Bind(wx.EVT_BUTTON, self.OnPrevious, previous)
-        self.Bind(wx.EVT_BUTTON, self.OnNext, nextt)
-        self.sizer_botoes.Add(previous, 0, wx.EXPAND | wx.ALL, 1)        
-        self.sizer_direita.Add(stop, 0, wx.EXPAND | wx.ALL, 1)   
-        self.sizer_botoes.Add(play, 0, wx.EXPAND | wx.ALL, 1)   
-        self.sizer_botoes.Add(nextt, 0, wx.EXPAND | wx.ALL, 1)  
-        self.panel_botoes.SetSizer(self.sizer_botoes)
+        play = self.toolbar.AddLabelTool(wx.ID_UP,'Play/Pause', wx.Bitmap('images/play.png'))
+
+        nextt = self.toolbar.AddLabelTool(wx.ID_PREVIEW_NEXT,'Next', wx.Bitmap('images/next.png'))     
+        
+        self.toolbar.Realize()
+        self.Bind(wx.EVT_TOOL, self.OnPlayPause, play)
+        self.Bind(wx.EVT_TOOL, self.OnStop, stop)
+        self.Bind(wx.EVT_TOOL, self.OnPrevious, previous)
+        self.Bind(wx.EVT_TOOL, self.OnNext, nextt)
+        titulo = wx.Font(13, wx.DEFAULT, wx.NORMAL, wx.BOLD)
+        line = wx.StaticLine(self.panel_direita, size=(320,2), style=wx.LI_HORIZONTAL)
+        self.sizer_direita.Add(line,0,border=0)
+        self.panel_graficos = wx.Panel(self.panel_direita, size=(320,0))
+        self.sizer_graficos = wx.BoxSizer(wx.VERTICAL)
+        txt = wx.StaticText(self.panel_graficos, label=u"Entrada")
+        txt.SetFont(titulo)
+        txt.SetForegroundColour("#FFFFFF")
+        self.panel_graficos.SetSizer(self.sizer_graficos)        
+        self.sizer_graficos.Add(txt,0, wx.LEFT, 10)
+        
+        self.sizer_direita.Add(self.panel_graficos,0,wx.EXPAND | wx.TOP | wx.BOTTOM, 5)
+        
+        grafico_entrada = self.create_graph(self.panel_graficos,self.sizer_graficos)
+        txt2 = wx.StaticText(self.panel_graficos, label=u"Saída")
+        txt2.SetFont(titulo)
+        txt2.SetForegroundColour("#FFFFFF")       
+        self.sizer_graficos.Add(txt2,0, wx.LEFT, 10)
+        line2 = wx.StaticLine(self.panel_direita, size=(320,2), style=wx.LI_HORIZONTAL)
+        self.sizer_direita.Add(line2,0,border=0)
+     
         # Variáveis relacionadas ao filtro
+     
+     
+     
+     
+     
         #Uma tupla formada por 3 listas (check,edita,filtro)
         self.filters = ([],[],[])
         self.filtros_aplicados = []
@@ -445,7 +496,62 @@ class main_window(wx.Frame):
         
    
         
-  
+    def create_graph(self, parent, sizer):
+        graph_panel = wx.Panel(parent, size=(320,0))
+        self.datagen = DataGen()
+        self.data = [self.datagen.next()]
+        self.dpi = 160
+        self.fig = Figure((2.0, 1.0), dpi=self.dpi)
+        self.axes = self.fig.add_subplot(111)
+        self.fig.add_subplot()
+        self.fig.subplots_adjust(bottom=0.009,left=0.003,right=0.993, top=0.991)
+        self.axes.set_axis_bgcolor('black')
+        #self.axes.set_axis_off()
+        pylab.setp(self.axes.get_xticklabels(), fontsize=4)
+        pylab.setp(self.axes.get_yticklabels(), fontsize=4)        
+        #self.axes("off")
+        # plot the data as a line series, and save the reference 
+        # to the plotted line series
+        #
+        self.plot_data = self.axes.plot(
+            self.data, 
+            linewidth=1,
+            color=(1, 1, 0),
+            )[0] 
+
+        self.canvas = FigCanvas(graph_panel, -1, self.fig)        
+        self.vbox = wx.BoxSizer(wx.VERTICAL)
+        self.vbox.Add(self.canvas, 0)        
+        graph_panel.SetSizer(self.vbox)
+        sizer.Add(graph_panel, 0, wx.TOP | wx.BOTTOM, 5)
+        self.axes.set_xbound(lower=0, upper=100)
+        self.axes.set_ybound(lower=-1.0, upper=1.0)
+        
+       
+        self.redraw_timer = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.on_redraw_timer, self.redraw_timer)        
+        self.redraw_timer.Start(50)
+
+        return graph_panel
+    def draw_plot(self):
+        xmax = len(self.data) if len(self.data) > 50 else 50
+        xmin = xmax - 50        
+        ymin = round(min(self.data), 0) - 0.1
+        ymax = round(max(self.data), 0) + 0.1
+        self.axes.set_xbound(lower=xmin, upper=xmax)
+        self.axes.set_ybound(lower=ymin, upper=ymax)
+        self.plot_data.set_xdata(np.arange(len(self.data)))
+        self.plot_data.set_ydata(np.array(self.data))
+        self.canvas.draw()
+        
+    def on_redraw_timer(self, event):
+        # if paused do not add data, but still redraw the plot
+        # (to respond to scale modifications, grid change, etc.)
+        #
+        
+        self.data.append(self.datagen.next())
+        
+        self.draw_plot()
     
     def botoes_pause(self):
                 
@@ -603,8 +709,9 @@ class main_window(wx.Frame):
         self.mostra_lista_filtro(self.get_edit_list_selection())
             
     def filter_list_box (self, parent, sizer, preset):
-         self.list_edit_filters = wx.ListBox(parent, -1,size=(320,600))
-        # sizer.Add(self.list_edit_filters, 0, wx.EXPAND | wx.TOP, 10)
+         self.list_edit_filters = wx.ListBox(parent, -1, size=(320,200))
+         sizer.Add(self.list_edit_filters, 0)
+         self.toolbar.Realize()
          self.Bind(wx.EVT_LISTBOX, self.OnClick)
          for i in range(len(preset)):
              self.list_edit_filters.Append(str(i))
