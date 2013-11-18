@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-import serial, threading, time
-from audiolazy import *
+import serial, threading
+from audiolazy import ControlStream
 
 class SerialData (threading.Thread):
     """
@@ -24,7 +24,6 @@ class SerialData (threading.Thread):
         limiar_inferior_pedal: Valor mínimo, abaixo desse valor usamos o padrao_pedaleira como entrada
         """        
         try:
-            
             self.padrao_pedal = padrao_pedaleira
             self.pedal = ControlStream(self.padrao_pedal)
             self.proximo = func_proximo
@@ -34,9 +33,10 @@ class SerialData (threading.Thread):
             self.kill_thread = False
             self.pause_thread = False    
             self.serial = serial.Serial(porta,data_rate)
-            threading.Thread.__init__(self)
         except:
             self.pedal = ControlStream(self.padrao_pedal)
+            self.kill_thread = True
+        threading.Thread.__init__(self)
     def run(self):
         while True:     
             if self.kill_thread:
@@ -70,6 +70,7 @@ class SerialData (threading.Thread):
         self.pause_thread = True
     def __del__(self):
         self.kill_thread = True
+        self.kill()
     def resume(self):
         """
         Resume a execução da Thread

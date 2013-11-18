@@ -87,3 +87,14 @@ class FloatSlider(wx.Slider):
                 e.GetEventObject().SetValue(float(valor))
             
         self.SetValue(valor)
+
+class DataGen(object):
+    """
+    Classe que gera uma lista dos valores de um stream
+    """
+    def __init__(self, window):
+        self.window = window
+    def next(self):
+        if self.window.player is not None:
+            retorno = self.window.player.last_input_output()
+            return retorno

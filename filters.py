@@ -171,7 +171,7 @@ class Filtro:
 
 
 
-
+# O que esta abaixo não está implementado ainda !
   
 def the_resonator (signal,freq,band):
     res = resonator(freq*Hz,band*Hz)
@@ -213,33 +213,3 @@ def flanger (sig):
     variante = line(10.0*s,10.0*s/1000.0,30.0*s/1000.0)
     sig = thub(sig, 2)
     return sig 
-
-
-"""digital_filters = {"lowpass": ["Passa-baixas",low_pass,("Frequência de Corte (Hz)"),(500)]
-, "highpass": ["Passa-altas",high_pass,("Frequência de Corte (Hz)"),(800)]
-, "ressonator": ["Ressonador",th  sig = thub(sig, 2)e_resonator,("Frequência Ressonante (Hz)","Tamanho da Banda (Hz)"),(800,100)]
-, "limiter": ["Limitador",the_limiter,("Início (0-1)"),(0.5) ]
-, "echo": ["Eco",echo,("Tempo de Eco (s)"),(0.05) ]
-, "expander": ["Expansor",expander,("Fim (0-1), Fator (0-1)"),(0.5,0.001) ]
-, "compressor": ["Compressor",compressor,("Início (0-1), Fator (0-1)"),(0.5,0.001) ]
-
-    }
-"""
-
-
-""" #Teste de sexta
-vabs = builtins.abs
-@tostream
-def distwire(sig):
-    for el in sig:
-        if vabs(el) < .5: yield el
-        else: yield el/vabs(el) - el
-
-with AudioIO(True) as saida:
-    data = sinusoid(440*Hz)
-    output = phaser(distwire(data),400) 
-    saida.play(output)
-
-
-"""
-
