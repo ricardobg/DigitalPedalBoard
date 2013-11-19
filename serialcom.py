@@ -12,7 +12,7 @@ class SerialData (threading.Thread):
     O atributo é
     """
     def __init__(self, porta='COM8', data_rate=9600, padrao_pedaleira=0.5, func_proximo=None
-                 , func_anterior=None, limiar_superior_pedal=3.5, limiar_inferior_pedal=0.1):
+                 , func_anterior=None, limiar_superior_pedal=650):
         """
         Inicia a leitura dos dados assim como a porta
         porta: A porta Serial em que o Arduino está
@@ -29,7 +29,6 @@ class SerialData (threading.Thread):
             self.proximo = func_proximo
             self.anterior = func_anterior
             self.limiar_superior_pedal = limiar_superior_pedal
-            self.limiar_inferior_pedal = limiar_inferior_pedal
             self.kill_thread = False
             self.pause_thread = False    
             self.serial = serial.Serial(porta,data_rate)
@@ -55,14 +54,14 @@ class SerialData (threading.Thread):
             if ident == 1:
                 estado = valor
             elif ident == 2:
-               self.pedal.value = (float(valor)/(1023.0))
+               self.pedal.value = (float(valor)/(self.limiar_superior_pedal))
             if self.pause_thread:
                 return
             if estado == 1 and self.proximo is not None:
                 self.proximo()
             elif estado == 2 and self.anterior is not None:
                 self.anterior()        
-           # print ident,valor
+            #print ident,valor
     def pause(self):
         """
         Pausa a Thread

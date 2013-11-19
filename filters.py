@@ -16,7 +16,7 @@ seus parâmetros, nome, etc.
 
  
 def amp(signal, ganho, ganho_max):
-    return ((ganho_max/2)*(ganho+1)) * signal
+    return ((ganho_max/2)*(10*ganho+1)) * signal
 def amplificador(ganho_max=5.0):
     """
     Filtro que amplifica o sinal (ganho>1)

@@ -5,11 +5,14 @@ File to create windows and widgets
 """
 import data
 import filters
-import wx
 import player
+import serialcom as sc
+from lib import FloatSlider, DataGen, MyThread
+
+
+import wx
 import copy
-import sys
-import serialcom as sc           
+import sys     
 import matplotlib
 matplotlib.use('WXAgg')
 from matplotlib.figure import Figure
@@ -17,7 +20,7 @@ from matplotlib.backends.backend_wxagg import \
     FigureCanvasWxAgg as FigCanvas
 import numpy as np
 import pylab
-from lib import FloatSlider, DataGen
+
 
 
 
@@ -74,7 +77,7 @@ class main_window(wx.Frame):
       
         
         # Tempo de refresh do gráfico em ms
-        self.graph_refresh_time = 5
+        self.graph_refresh_time = 100
         self.pausa_grafico = False
         
         # Cria o panel e sizer principal
@@ -319,9 +322,10 @@ class main_window(wx.Frame):
            self.lista_preset.InsertStringItem(sys.maxint, item.name)
 
         self.lista_preset.SetColumnWidth(0, self.lista_preset.GetSize()[0]-5)
-        self.pedal = sc.SerialData(func_proximo=lambda: self.OnNext(None),
+        if self.pedal is None:
+            self.pedal = sc.SerialData(func_proximo=lambda: self.OnNext(None),
                                    func_anterior=lambda: self.OnPrevious(None))
-        self.pedal.start()
+            self.pedal.start()
         filters.pedal = self.pedal.pedal
         
         self.desenha_graficos()
@@ -449,10 +453,10 @@ class main_window(wx.Frame):
                 self.player = player.Player(self.filtros_aplicados)
                 self.botoes_play()
                 self.status = 1
-                self.timer_graph.Start(self.graph_refresh_time)
+                self.timer_graph.start()
             elif self.status == 1:
                 # Pausa
-                self.timer_graph.Stop()
+                self.timer_graph.stop()
                 self.player.pausar()
                 self.botoes_pause()
                 self.status = 2
@@ -461,17 +465,17 @@ class main_window(wx.Frame):
                 self.player.tocar(self.filtros_aplicados)
                 self.botoes_play()
                 self.status = 1
-                self.timer_graph.Start(self.graph_refresh_time)
+                self.timer_graph.start()
         if self.preset_mode == 1: # Reproduzindo COM preset
             if self.status == 0:
                 # Começa a tocar   
                 self.player = player.Player(self.preset[self.posicao_preset])
                 self.botoes_play()
                 self.status = 1
-                self.timer_graph.Start(self.graph_refresh_time)
+                self.timer_graph.start()
             elif self.status == 1:
                 # Pausa
-                self.timer_graph.Stop()
+                self.timer_graph.stop()
                 self.player.pausar()
                 self.botoes_pause()
                 self.status = 2
@@ -480,7 +484,7 @@ class main_window(wx.Frame):
                 self.player.tocar(self.preset[self.posicao_preset])
                 self.botoes_play()
                 self.status = 1
-                self.timer_graph.Start(self.graph_refresh_time)
+                self.timer_graph.start()
         
         if self.preset_mode == 2: # Editando preset (começar a tocar)
             self.OnStartPreset(None)   
@@ -668,14 +672,7 @@ class main_window(wx.Frame):
             i += 1
         data.load_defaults(self.filters[2])
         self.panel_filtros.SetSizer(box_esquerda)
-              
-        """       
-        self.panel_direita.Fit()
-        self.panel_direita.Layout()
-        self.Layout()
-        self.panel_direita.Update()
-        self.sizer_direita.Layout()      
-        """
+
         self.panel_esquerda.Fit()
         self.sizer_principal.Layout()
         self.panel_direita.Fit()
@@ -756,7 +753,7 @@ class main_window(wx.Frame):
         txt2.SetFont(titulo)
         txt2.SetForegroundColour("#FFFFFF")       
         self.sizer_graficos.Add(txt2,0, wx.LEFT, 10)
-        self.create_output_graph(self.panel_graficos,self.sizer_graficos, self.timer_graph)        
+        self.timer_graph2 = self.create_output_graph(self.panel_graficos,self.sizer_graficos)        
         self.sizer_direita.Add(self.panel_graficos,0,wx.EXPAND | wx.TOP | wx.BOTTOM, 5)
         
         
@@ -765,7 +762,7 @@ class main_window(wx.Frame):
         
     # Funções create_input_graph, create_output_graph e on_redraw_graph
     # Adaptadas de http://eli.thegreenplace.net/files/prog_code/wx_mpl_dynamic_graph.py.txt 
-    def create_output_graph(self, parent, sizer, timer):
+    def create_output_graph(self, parent, sizer):
         """
         Função que cria um gráfico que imprime a saída
         """
@@ -791,7 +788,7 @@ class main_window(wx.Frame):
         sizer.Add(graph_panel, 0, wx.TOP | wx.BOTTOM, 5)
         self.axes_output.set_xbound(lower=0, upper=100)
         self.axes_output.set_ybound(lower=-1.0, upper=1.0)
-        self.Bind(wx.EVT_TIMER, self.on_redraw_graph, timer)        
+        #self.Bind(wx.EVT_TIMER, self.on_redraw_graph, timer)        
         #self.redraw_timer_output.Start(self.graph_refresh_time)
     
     def create_input_graph(self, parent, sizer):
@@ -822,7 +819,7 @@ class main_window(wx.Frame):
         sizer.Add(graph_panel, 0, wx.TOP | wx.BOTTOM, 5)
         self.axes_input.set_xbound(lower=0, upper=100)
         self.axes_input.set_ybound(lower=-1.0, upper=1.0)
-        redraw_timer_input = wx.Timer(self)
+        redraw_timer_input = MyThread(self.graph_refresh_time, self.on_redraw_graph, self) #wx.Timer(self)
         #self.Bind(wx.EVT_TIMER, self.on_redraw_graph, on_redraw_graph)        
         
         #self.redraw_timer_input.Start(self.graph_refresh_time)
@@ -840,7 +837,7 @@ class main_window(wx.Frame):
             self.plot_data_output.set_ydata(np.array(self.data_output))
             self.canvas_input.draw()
             self.canvas_output.draw()
-            self.timer_graph.Stop()
+            self.timer_graph.stop()
             return
             
         tupla = self.input_data_generator.next()

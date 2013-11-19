@@ -3,8 +3,10 @@
 Arquivo que cuida da execução do Áudio, assim como a aplicação dos filtros
 """
 
-from audiolazy import Stream, Streamix, AudioIO, CascadeFilter, line
+from audiolazy import Stream, Streamix, AudioIO, CascadeFilter, line, thub, tee
 import filters
+import time
+import Tkinter as tkinter
 
 # Classe adaptada de https://github.com/danilobellini/audiolazy/blob/master/examples/keyboard.py
 class ChangeableStream(Stream):
@@ -15,24 +17,16 @@ class ChangeableStream(Stream):
     while True:
       self.last = next(self._data)
       yield self.last
-
-class MyStreamix(Streamix):
-  """
-  Mudança na classe Streamix para guardarmos o último valor
-  """
-  def __iter__(self):
-    while True:
-      self.last = next(self._data)
-      yield self.last
-
-
+      
+      
+ms = 1e-3 * filters.s
 class Player():
     """
     Classe Player, gerencia um player de Audio.
     É destruído no STOP.
     Ao pausar apenas para de exibir novos valores
     """
-    
+   
     def __init__(self, lista_filtros, ncanais=1,rate=44100):
         """
         Inicia o Player.
@@ -40,25 +34,26 @@ class Player():
         de uma preset.
         pos: Posição Inicial no preset
         """
+       
         self.filtros = lista_filtros
         if self.filtros is not None:
             self.filter = CascadeFilter(self.filtros)
         else:
             self.filter = CascadeFilter()
         self.ncanais = ncanais
-        #ms = 1e-3 * filters.s
-        self.release = 50.0*filters.s/1000.0
+       
+        self.release = 0.05*filters.s
         self.rate = rate
-        self.player = AudioIO(False)
-        self.streamix = Streamix()
-        self.input =  ChangeableStream(self.player.record(nchannels=ncanais,rate=rate))
-        self.dados = self.filter(self.input)
-        self.stream = ChangeableStream(self.dados)
-        self.stream.last = 0.0
-        self.input.last = 0.0
+        self.player = AudioIO()
+        self.streamix = Streamix(True)
+        self.input = ChangeableStream(self.player.record(nchannels=ncanais,rate=rate))
+        self.stream = ChangeableStream(self.filter(self.input))
+        self.player.play(self.streamix)        
         self.streamix.add(0,self.stream)
         
-        self.player.play(self.streamix)
+        
+        #tk = tkinter.Tk()
+        
         
     def last_input_output(self):
         """
@@ -66,30 +61,39 @@ class Player():
         Na forma de tupla (in,out)
         """
         try:
-            return (self.input.last,self.stream.last)
+           return (self.input.last, self.stream.last)
         except:
-            return None
+            return (0,0)
     def muda_filtro(self, novos_filtros, window):
         """
         Muda o filtro aplicado, garantindo que não haja um "click" ao fazer isso
         """
-        window.pausa_grafico = True
+        #window.pausa_grafico = True
+
+
+        self.chamando = True
         novo_filtro = CascadeFilter(novos_filtros)
-        self.filter = novo_filtro
+        #self.filter = novo_filtro
+        #ult = len(self.stream)-1        
+        #self.cs[ult].limit(0)#.append(line(self.release,last,0))
+        #self.cs.append(ChangeableStream(1))
+        #self.stream.append(Stream(dados)*self.cs[ult+1])
+        #self.stream[ult+1].last = 0.0
         last = self.stream.last
-        self.stream.limit(0).append(line(self.release,last,0))
-        self.input.last = 0.0
-        self.dados = self.filter(self.input)
-        self.stream = ChangeableStream(self.dados)
-        self.stream.last = 0.0
-        novo_mix = Streamix()
-        novo_mix.add(0,self.stream)
-        self.player.play(novo_mix)
-        window.pausa_grafico = False    
+        self.stream.limit(0).append(line(self.release,last,0))      
+        self.stream = ChangeableStream(novo_filtro(self.input))
+        self.streamix.add(0, self.stream)
+        
+        #novo_mix = Streamix()
+        #novo_mix.add(0,self.stream)
+        #self.player.play(novo_mix)
+        #window.pausa_grafico = False    
+        
            
     def __del__(self):
         if not self.player.finished:
             self.player.close()
+            self.playerGrava.close()
     def pausar (self):
         """
         Para o player
