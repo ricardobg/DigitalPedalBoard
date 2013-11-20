@@ -11,7 +11,7 @@ class SerialData (threading.Thread):
     Seu atributo pedal contem um ControlStream usado para alterar parâmetros "on the fly" de algum filtro
     O atributo é
     """
-    def __init__(self, porta='COM8', data_rate=9600, padrao_pedaleira=0.5, func_proximo=None
+    def __init__(self, porta='COM8', data_rate=9600, padrao_pedaleira=0.1, func_proximo=None
                  , func_anterior=None, limiar_superior_pedal=650):
         """
         Inicia a leitura dos dados assim como a porta
@@ -55,14 +55,17 @@ class SerialData (threading.Thread):
             if ident == 1:
                 estado = valor
             elif ident == 2:
-               self.pedal.value = (float(valor)/(self.limiar_superior_pedal))
+               if valor == 0:
+                   self.pedal.value = self.padrao_pedal
+               else:
+                    self.pedal.value = (float(valor)/(self.limiar_superior_pedal))
+               
             if self.pause_thread:
                 return
             if ident == 1 and estado == 1 and self.proximo is not None:
                 self.proximo()
             elif ident == 1 and estado == 2 and self.anterior is not None:
                 self.anterior()        
-            #print ident,valor
     def pause(self):
         """
         Pausa a Thread

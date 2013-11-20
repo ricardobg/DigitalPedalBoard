@@ -125,3 +125,4 @@ class MyThread(Thread):
             self.__init__(self.time, self.func, self.window)
         self._parar = False
         Thread.start(self)
+        

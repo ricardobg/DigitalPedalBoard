@@ -9,10 +9,48 @@ from audiolazy import *
 rate = 44100
 s,Hz = sHz(rate)
 #chunks.size = 16
+
+
+@tostream
+def envoltoria(sig,alpha=.9999):
+    last = 0.    
+    for el in sig:
+        if el < last: 
+            last *= alpha
+            yield last
+        else:
+            last = el
+            yield last
+
+
+
 """
 Funções que retornam Stream seguidas pela função que instancia o seu filtro com
 seus parâmetros, nome, etc.
 """
+
+# DELAYS
+
+
+def echo (sig, echo_time):
+    sig = thub(sig/2, 2)
+    smixer = Streamix()
+    smixer.add(0,sig)
+    smixer.add(echo_time*s,sig)
+    return smixer
+def eco(delay=0.001):
+    """
+    Retorna uma instância do Eco
+    """
+    dic = {u"Intervalo (s)":(0.2,float,(0,5))}
+    inst = Filtro(echo, dic, u"Eco")
+    inst.vparams[0] = delay
+    return inst
+
+
+
+
+# FILTROS BÁSICOS
 
 @tostream
 def amp(sig, ganho, ganho_max):
@@ -41,20 +79,6 @@ def passa_baixas(cutoff=700):
     inst.vparams[0] = cutoff
     return inst
 
-def echo (sig, echo_time):
-    sig = thub(sig/2, 2)
-    smixer = Streamix()
-    smixer.add(0,sig)
-    smixer.add(echo_time*s,sig)
-    return smixer
-def eco(delay=0.001):
-    """
-    Retorna uma instância do Eco
-    """
-    dic = {u"Intervalo (s)":(0.2,float,(0,5))}
-    inst = Filtro(echo, dic, u"Eco")
-    inst.vparams[0] = delay
-    return inst
 
 def high_pass (signal,cutoff):
         filt = highpass(cutoff*Hz)
@@ -82,16 +106,18 @@ def passa_tudo(cutoff=700):
     inst.vparams[0] = cutoff
     return inst
     
+    
+    
+# LIMITADORES
+    
 def the_limiter(sig,threshold):
         sig = thub(sig, 2)
-        size=256
-        env=envelope.rms
-        cutoff=pi/2048
         return sig * Stream( 1. if el <= threshold else threshold / el
-               for el in maverage(size)(env(sig, cutoff=cutoff)) )
+               for el in envoltoria(sig) )
 
 def limitador(threshold=.5):
-    """ Filtro limitador. Limita as amplitudes ao limiar
+    """ 
+    Filtro limitador. Limita as amplitudes ao limiar
     """
     dic = {u"Limiar":(.5,float,(0,1))}
     inst = Filtro(the_limiter, dic, u"Limitador")
@@ -100,13 +126,11 @@ def limitador(threshold=.5):
 
 def the_compressor(sig,threshold,slope):
         sig = thub(sig, 2)
-        size=256
-        env=envelope.rms
-        cutoff=pi/2048
         return sig * Stream(1. if el <= threshold else (slope + threshold*(1 - slope)/el)
-                for el in maverage(size)(env(sig, cutoff=cutoff)) )
+                for el in envoltoria(sig))
 def compressor(threshold=.5, slope=.5):
-    """ Atenua os sons a partir de certo limiar com uma tangente
+    """ 
+    Atenua os sons a partir de certo limiar com uma tangente
     """
     dic = {u"Limiar":(.5,float,(0,1)),
            u"Tangente":(.5,float,(0,1))}
@@ -114,7 +138,11 @@ def compressor(threshold=.5, slope=.5):
     inst.vparams[0] = threshold
     inst.vparams[1] = slope
     return inst
-    
+  
+
+
+# DISTORÇÕES
+  
 @tostream
 def distwire(sig,threshold):
     for el in sig:
@@ -133,21 +161,20 @@ def dist_wire(threshold=.5):
 @tostream
 def the_flang(sig, freq, lag):
     posicao = lambda senoide: int((lag*s/2000.0)*(senoide+1))
-    senoide = sinusoid(freq*Hz,phase=-pi/2)    
-    lista = [0. for i in range(int((lag*s/1000.0))+1)]  
+    senoide = sinusoid(freq*Hz,phase=-pi/2)  
+    ms = 1e-3*s
+    lista = zeros().take(lag * ms + 1) 
     tam = len(lista)-1
-    for el in sig:
+    for el,v in izip(sig,senoide):
         lista.append(el)
         lista.pop(0)
-        pos = tam-posicao(senoide.take())
-        yield (el + lista[pos])/2
-        
-def o_flanger(freq=0.1,lag=20):
+        yield (el + lista[tam-posicao(v)])/2
+def o_flanger(freq=0.3,lag=2):
     """
     Flanger
     """
-    dic = {u"Frequência (mHz)":(.1,float,(.01,10))
-        , u"Lag (ms)":(20,float,(1,50))}
+    dic = {u"Frequência (mHz)":(.3,float,(.01,5))
+        , u"Lag (ms)":(2,float,(1,50))}
     inst = Filtro(the_flang, dic, u"Flanger")
     inst.vparams[0] = freq
     inst.vparams[1] = lag
@@ -159,7 +186,7 @@ def o_flanger(freq=0.1,lag=20):
 #detune=flanger > 20ms
 
 # Variável ControlStream (ou inteiro) com a entrada do pedal
-pedal = ControlStream(0.5)
+pedal = ControlStream(0.1)
      
 class Filtro:
     """ 
@@ -201,7 +228,7 @@ class Filtro:
                 }
         
 
-
+# Envoltória com decaimento exponencial
 
 # O que esta abaixo não está implementado ainda !
   

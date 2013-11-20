@@ -185,6 +185,10 @@ class main_window(wx.Frame):
         self.menu.Enable(wx.ID_SAVE, 0)
         self.menubar.EnableTop(1, False)
         self.botoes_pause()
+        if self.pedal is None:
+            self.pedal = sc.SerialData()
+            self.pedal.start()
+        filters.pedal = self.pedal.pedal
         #self.toolbar.SetToolNormalBitmap(wx.ID_UP ,wx.Bitmap('images/play.png'))
         
         pass
@@ -241,6 +245,9 @@ class main_window(wx.Frame):
         self.menu_preset.Enable(wx.ID_SETUP, False)
         self.menu_preset.Enable(wx.ID_EDIT, True)
         self.botoes_pause()
+        
+     
+   
    
     """
     Funções que gerenciam os eventos de mudança de modo
@@ -251,7 +258,7 @@ class main_window(wx.Frame):
          """
          self.pausa_grafico = True
          if self.preset_mode == 1 and self.status == 1:
-            filters.pedal = ControlStream(0.5)
+            filters.pedal = ControlStream(0.1)
             self.pedal.kill()
          self.modo_edita_preset()         
          self.preset = [[]]
@@ -295,7 +302,7 @@ class main_window(wx.Frame):
             return 
         self.preset = data.load_preset(openFileDialog.GetPath())
         if self.preset_mode == 1 and self.status == 1:
-            filters.pedal = ControlStream(0.5)
+            filters.pedal = ControlStream(0.1)
             self.pedal.kill()
         self.OnEditPreset(None)
        
@@ -351,7 +358,7 @@ class main_window(wx.Frame):
         """
         self.pausa_grafico = True
         if self.preset_mode == 1 and self.status == 1:
-            filters.pedal = ControlStream(0.5)
+            filters.pedal = ControlStream(0.1)
             self.pedal.kill()
         self.posicao_preset = 0
         self.modo_edita_preset()        
@@ -377,7 +384,7 @@ class main_window(wx.Frame):
         self.posicao_preset  = 0
         if self.preset_mode == 1: # Tocando
             if self.status == 1:
-                filters.pedal = ControlStream(0.5)
+                filters.pedal = ControlStream(0.1)
                 self.pedal.kill()
             self.sizer_esquerda.Remove(self.panel_preset)
             self.panel_preset.Destroy()
