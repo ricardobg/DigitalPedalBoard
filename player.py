@@ -51,10 +51,6 @@ class Player:
         self.player.play(self.streamix, rate=self.rate)        
         self.streamix.add(0,self.stream)
         
-        
-        #tk = tkinter.Tk()
-        
-        
     def last_input_output(self):
         """
         Função que retorna os últimos valores de input e output

@@ -265,15 +265,7 @@ def filtro_res(freq=900,band=5):
     , u"Banda": (5,float,(1,100))}
     inst = Filtro(the_resonator, dic, u"Resonator",False)
     return inst
-#flanger = 1 + z^-D
-#
-
     
-#freq ~ 100mHz
-#lag < 8ms
-
-#detune=flanger > 20ms
-
 # Variável ControlStream (ou inteiro) com a entrada do pedal
 pedal = ControlStream(0.1)
      
@@ -316,33 +308,3 @@ class Filtro:
                 , u"Delays": (eco, filtro_delay_variavel, o_flanger)                
                 }
         
-
-# Envoltória com decaimento exponencial
-
-# O que esta abaixo não está implementado ainda !
-  
-
-    
-
-"""
-Atenua as partes abaixo de certo limite
-"""
-
-"""
-Atenua partes do sinal maior do que certo limite
-"""
-
-
-
-def phaser (sig, cutoff):
-   # sig = thub(sig/2, 2)
-    #func = (lambda sig: all_pass(sig,cutoff*Hz))
-    return CascadeFilter(lambda signal: all_pass(signal,cutoff*(6+5*sinusoid(2*Hz))*Hz ) for param in xrange(7,8))(sig)
-  #  return sig + all_pass(all_pass(all_pass(all_pass(sig,cutoff*1.2*Hz),cutoff*0.8*Hz),cutoff*1.05*Hz),cutoff*Hz)
-
-def teste (samplefreq=44100):
-      return (pi*samplefreq)/((pi*samplefreq)*2 + z**2)
-            
-def distortion1 (sig):
-    gen = 10 + 5*sinusoid(5*Hz)    
-    return atan(sig*gen)/(pi/2)
