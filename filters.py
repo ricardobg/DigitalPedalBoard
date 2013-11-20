@@ -207,6 +207,64 @@ def dist_wire(threshold=.5):
     inst.vparams[0] = threshold
     return inst
 
+def senoide(sig,freq):
+    return sig*sinusoid(freq*Hz)    
+def filtro_senoide(freq=700):
+    """ 
+    Multiplica por senóide
+    """
+    dic = {u"Frequência (Hz)":(700,float,(0,20000))}
+    inst = Filtro(senoide, dic, u"Senóide")
+    inst.vparams[0] = freq
+    return inst
+
+def senoide_var(sig,freq,freq_max):
+    return sig*sinusoid(freq*freq_max*Hz)    
+def filtro_senoide_var(freq_max=10000):
+    """ 
+    Multiplica por senóide variável
+    """
+    dic = {u"Frequência Máxima (Hz)":(10000,float,(0,20000))}
+    inst = Filtro(senoide_var, dic, u"Ring modulation",True)
+    return inst
+
+@tostream
+def corta_var(sig, corta, limite):
+    for el,v in izip(sig,corta):
+        if v > limite: yield 0.
+        else: yield el
+def filtro_corta(limite=.5):
+    """ 
+    Corta o som
+    """
+    dic = {u"Limite":(.5,float,(0,1))}
+    inst = Filtro(corta_var, dic, u"Cortar",True)
+    return inst
+
+
+def mult_env(sig,alpha):
+    return sig * envoltoria(sig,alpha)
+
+def filtro_mult_env(alpha=.9999):
+    """ 
+    Corta o som
+    """
+    dic = {u"Alpha":(.9999,float,(0.1,.999999))}
+    inst = Filtro(mult_env, dic, u"Envoltória",False)
+    return inst
+
+def the_resonator (signal,freq,band):
+    res = resonator(freq*Hz,band*Hz)
+    return res(signal)
+    
+def filtro_res(freq=900,band=5):
+    """
+    Ressonador
+    """
+    dic = {u"Frequência":(900,float,(0,20000))
+    , u"Banda": (5,float,(1,100))}
+    inst = Filtro(the_resonator, dic, u"Resonator",False)
+    return inst
 #flanger = 1 + z^-D
 #
 
@@ -251,10 +309,10 @@ class Filtro:
             return (self.__fun(sig, pedal, *(tuple(self.vparams))))
 
 
-    filtros = {u"Filtros Básicos": (passa_altas,passa_baixas,passa_tudo, amplificador)
+    filtros = {u"Filtros Básicos": (passa_altas,passa_baixas,passa_tudo, amplificador, filtro_corta)
             , u"Limitadores": (limitador,compressor,filtro_expander)
     
-                , u"Distorções": (dist_wire,)
+                , u"Distorções": (dist_wire,filtro_senoide_var,filtro_senoide, filtro_mult_env, filtro_res)
                 , u"Delays": (eco, filtro_delay_variavel, o_flanger)                
                 }
         
@@ -263,9 +321,7 @@ class Filtro:
 
 # O que esta abaixo não está implementado ainda !
   
-def the_resonator (signal,freq,band):
-    res = resonator(freq*Hz,band*Hz)
-    return res(signal)
+
     
 
 """
