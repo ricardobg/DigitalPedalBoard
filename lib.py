@@ -115,7 +115,7 @@ class MyThread(Thread):
         while not self.stopped.wait(self.time/1000.0):
            if self._parar:
                return
-           self.func(self.window)
+           self.func(None)
     def stop(self):
         self._parar = True
     def __del__(self):

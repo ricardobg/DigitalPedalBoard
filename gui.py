@@ -8,6 +8,7 @@ import filters
 import player
 import serialcom as sc
 from lib import FloatSlider, DataGen, MyThread
+from audiolazy import ControlStream
 
 
 import wx
@@ -22,7 +23,7 @@ import numpy as np
 import pylab
 
 
-
+sys.tracebacklimit = 0
 
    
 class main_window(wx.Frame):
@@ -181,6 +182,7 @@ class main_window(wx.Frame):
         self.preset = []
         self.menu.Enable(wx.ID_NEW, 1)
         self.menu.Enable(wx.ID_OPEN, 1)
+        self.menu.Enable(wx.ID_SAVE, 0)
         self.menubar.EnableTop(1, False)
         self.botoes_pause()
         #self.toolbar.SetToolNormalBitmap(wx.ID_UP ,wx.Bitmap('images/play.png'))
@@ -247,8 +249,9 @@ class main_window(wx.Frame):
          """
          Função para criar novo preset
          """
+         self.pausa_grafico = True
          if self.preset_mode == 1 and self.status == 1:
-            filters.pedal = 0.5
+            filters.pedal = ControlStream(0.5)
             self.pedal.kill()
          self.modo_edita_preset()         
          self.preset = [[]]
@@ -258,8 +261,9 @@ class main_window(wx.Frame):
 
          
          try:
+            self.timer_graph.stop()
             self.panel_graficos.Destroy()
-            
+            self.panel_graficos = None
          except:
             pass
          self.panel_direita.Fit()
@@ -291,7 +295,7 @@ class main_window(wx.Frame):
             return 
         self.preset = data.load_preset(openFileDialog.GetPath())
         if self.preset_mode == 1 and self.status == 1:
-            filters.pedal = 0.5
+            filters.pedal = ControlStream(0.5)
             self.pedal.kill()
         self.OnEditPreset(None)
        
@@ -345,8 +349,9 @@ class main_window(wx.Frame):
         """
         Edita um preset em execução
         """
+        self.pausa_grafico = True
         if self.preset_mode == 1 and self.status == 1:
-            filters.pedal = 0.5
+            filters.pedal = ControlStream(0.5)
             self.pedal.kill()
         self.posicao_preset = 0
         self.modo_edita_preset()        
@@ -355,7 +360,9 @@ class main_window(wx.Frame):
         self.mostra_lista_filtro(self.preset[0])
         
         try:
+            self.timer_graph.stop()
             self.panel_graficos.Destroy()
+            self.panel_graficos = None
         except:
             pass
         self.panel_direita.Fit()
@@ -370,7 +377,7 @@ class main_window(wx.Frame):
         self.posicao_preset  = 0
         if self.preset_mode == 1: # Tocando
             if self.status == 1:
-                filters.pedal = 0.5
+                filters.pedal = ControlStream(0.5)
                 self.pedal.kill()
             self.sizer_esquerda.Remove(self.panel_preset)
             self.panel_preset.Destroy()
@@ -735,7 +742,7 @@ class main_window(wx.Frame):
     """
     def desenha_graficos(self):
         titulo = wx.Font(13, wx.DEFAULT, wx.NORMAL, wx.BOLD)
-        
+        self.pausa_grafico = False
         # Panel/Sizer gráficos
         self.panel_graficos = wx.Panel(self.panel_direita, size=(320,0))
         self.sizer_graficos = wx.BoxSizer(wx.VERTICAL)
@@ -823,6 +830,7 @@ class main_window(wx.Frame):
         #self.Bind(wx.EVT_TIMER, self.on_redraw_graph, on_redraw_graph)        
         
         #self.redraw_timer_input.Start(self.graph_refresh_time)
+        
         return redraw_timer_input
     def on_redraw_graph(self, event):
         """
@@ -870,8 +878,13 @@ class main_window(wx.Frame):
         self.plot_data_output.set_xdata(np.arange(len(self.data_output)))
         self.plot_data_output.set_ydata(np.array(self.data_output))
         
-        self.canvas_input.draw()
-        self.canvas_output.draw()
+        
+        if self.panel_graficos is not None:
+            self.canvas_input.draw()
+            self.canvas_output.draw()
+        
+          
+
        
 
     def OnQuit(self, e):
@@ -989,7 +1002,8 @@ class edit_window (wx.Dialog):
          self.filtro.vparams = valores
          if not self.preset:
              data.salva_defaults(self.window.filters[2])
-             self.window.player.muda_filtro(self.window.filtros_aplicados, self.window)
+             if self.window.player is not None:
+                 self.window.player.muda_filtro(self.window.filtros_aplicados, self.window)
          self.Destroy()
 
 

@@ -17,7 +17,7 @@ seus parâmetros, nome, etc.
 @tostream
 def amp(sig, ganho, ganho_max):
      for el in sig:
-         ret = el*(ganho*ganho_max)            
+         ret = el*(ganho.take()*ganho_max)            
          if ret > 1: yield 1.
          else: yield ret
 def amplificador(ganho_max=5.0):
@@ -139,16 +139,15 @@ def the_flang(sig, freq, lag):
     for el in sig:
         lista.append(el)
         lista.pop(0)
-        v = senoide.take()
-        pos = tam-posicao(v)
+        pos = tam-posicao(senoide.take())
         yield (el + lista[pos])/2
         
 def o_flanger(freq=0.1,lag=20):
     """
     Flanger
     """
-    dic = {u"Frequência":(.1,float,(.01,100))
-        , u"Lag":(20,float,(1,100))}
+    dic = {u"Frequência (mHz)":(.1,float,(.01,10))
+        , u"Lag (ms)":(20,float,(1,50))}
     inst = Filtro(the_flang, dic, u"Flanger")
     inst.vparams[0] = freq
     inst.vparams[1] = lag
@@ -160,7 +159,7 @@ def o_flanger(freq=0.1,lag=20):
 #detune=flanger > 20ms
 
 # Variável ControlStream (ou inteiro) com a entrada do pedal
-pedal = 0.5
+pedal = ControlStream(0.5)
      
 class Filtro:
     """ 
