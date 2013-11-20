@@ -8,15 +8,18 @@ como parâmetros, nome, uso do pedal de expressão.
 from audiolazy import *
 rate = 44100
 s,Hz = sHz(rate)
-
+#chunks.size = 16
 """
 Funções que retornam Stream seguidas pela função que instancia o seu filtro com
 seus parâmetros, nome, etc.
 """
 
- 
-def amp(signal, ganho, ganho_max):
-    return ((ganho_max/2)*(10*ganho+1)) * signal
+@tostream
+def amp(sig, ganho, ganho_max):
+     for el in sig:
+         ret = el*(ganho*ganho_max)            
+         if ret > 1: yield 1.
+         else: yield ret
 def amplificador(ganho_max=5.0):
     """
     Filtro que amplifica o sinal (ganho>1)
@@ -25,6 +28,7 @@ def amplificador(ganho_max=5.0):
     inst = Filtro(amp, dic, u"Amplificador", True)
     inst.vparams[0] = ganho_max
     return inst
+    
 def low_pass (signal, cutoff):
         filt = lowpass(cutoff/(float(cutoff)))
         return filt(signal)
@@ -38,11 +42,11 @@ def passa_baixas(cutoff=700):
     return inst
 
 def echo (sig, echo_time):
-        sig = thub(sig, 2)
-        smixer = Streamix()
-        smixer.add(0,sig)
-        smixer.add(echo_time*s,sig)
-        return smixer
+    sig = thub(sig/2, 2)
+    smixer = Streamix()
+    smixer.add(0,sig)
+    smixer.add(echo_time*s,sig)
+    return smixer
 def eco(delay=0.001):
     """
     Retorna uma instância do Eco
@@ -113,9 +117,9 @@ def compressor(threshold=.5, slope=.5):
     
 @tostream
 def distwire(sig,threshold):
-        for el in sig:
-            if builtins.abs(el) < threshold: yield el
-            else: yield el/builtins.abs(el) - el
+    for el in sig:
+        if builtins.abs(el) < threshold: yield el
+        else: yield el/builtins.abs(el) - el
 def dist_wire(threshold=.5):
     """ Distorção Wire
     """
@@ -124,6 +128,36 @@ def dist_wire(threshold=.5):
     inst.vparams[0] = threshold
     return inst
 
+#flanger = 1 + z^-D
+#
+@tostream
+def the_flang(sig, freq, lag):
+    posicao = lambda senoide: int((lag*s/2000.0)*(senoide+1))
+    senoide = sinusoid(freq*Hz,phase=-pi/2)    
+    lista = [0. for i in range(int((lag*s/1000.0))+1)]  
+    tam = len(lista)-1
+    for el in sig:
+        lista.append(el)
+        lista.pop(0)
+        v = senoide.take()
+        pos = tam-posicao(v)
+        yield (el + lista[pos])/2
+        
+def o_flanger(freq=0.1,lag=20):
+    """
+    Flanger
+    """
+    dic = {u"Frequência":(.1,float,(.01,100))
+        , u"Lag":(20,float,(1,100))}
+    inst = Filtro(the_flang, dic, u"Flanger")
+    inst.vparams[0] = freq
+    inst.vparams[1] = lag
+    return inst
+    
+#freq ~ 100mHz
+#lag < 8ms
+
+#detune=flanger > 20ms
 
 # Variável ControlStream (ou inteiro) com a entrada do pedal
 pedal = 0.5
@@ -147,7 +181,6 @@ class Filtro:
         A variável estatica filtros contém um dicionário definido pelo grupo de filtros e por uma tupla contendo
         as funções que instanciam os filtros
         """
-        
         self.params = dic
         self.__fun = fun
         self.vparams = [valor[0] for valor in dic.values()]
@@ -165,7 +198,7 @@ class Filtro:
             , u"Limitadores": (limitador,compressor)
     
                 , u"Distorções": (dist_wire,)
-                , u"Delays": (eco,)                
+                , u"Delays": (eco, o_flanger)                
                 }
         
 

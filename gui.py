@@ -848,21 +848,16 @@ class main_window(wx.Frame):
         xmax_in = len(self.data_input) if len(self.data_input) > 100 else 100
         xmin_in = xmax_in - 100   
         size = round(max(abs(max(self.data_input[-100:])),abs(min(self.data_input[-100:])),abs(max(self.data_output[-100:])),abs(min(self.data_output[-100:]))),2)
+        if size == 0.00:
+            size = 1.     
         ymax_in = size*1.1
         ymin_in = size*(-1.1)     
-        if size == 0.00:
-            ymax_in = 1.0
-            ymin_in = -1.0
+       
         
         xmax_out = len(self.data_output) if len(self.data_output) > 100 else 100
         xmin_out = xmax_out - 100       
-        size2 = round(max(abs(max(self.data_output[-100:])),abs(min(self.data_output[-100:]))),2)
         ymax_out = size*1.1
         ymin_out = size*(-1.1)      
-        if size2 == 0.00:
-            ymax_out = 1.0
-            ymin_out = -1.0
-        #self.draw_plot()    
        
         self.axes_input.set_xbound(lower=xmin_in, upper=xmax_in)
         self.axes_input.set_ybound(lower=ymin_in, upper=ymax_in)

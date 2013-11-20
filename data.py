@@ -41,7 +41,7 @@ def load_defaults(lista_filtros):
         for filtro in lista_filtros:
             if padroes.has_key(filtro.name):
                 filtro.vparams = padroes[filtro.name]
-                filtro.update_default()
+                #filtro.update_default()
     except:
         pass
 

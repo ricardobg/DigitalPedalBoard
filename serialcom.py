@@ -36,6 +36,7 @@ class SerialData (threading.Thread):
             self.pedal = ControlStream(self.padrao_pedal)
             self.kill_thread = True
         threading.Thread.__init__(self)
+    
     def run(self):
         while True:     
             if self.kill_thread:
@@ -57,9 +58,9 @@ class SerialData (threading.Thread):
                self.pedal.value = (float(valor)/(self.limiar_superior_pedal))
             if self.pause_thread:
                 return
-            if estado == 1 and self.proximo is not None:
+            if ident == 1 and estado == 1 and self.proximo is not None:
                 self.proximo()
-            elif estado == 2 and self.anterior is not None:
+            elif ident == 1 and estado == 2 and self.anterior is not None:
                 self.anterior()        
             #print ident,valor
     def pause(self):

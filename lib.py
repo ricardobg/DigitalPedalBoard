@@ -4,6 +4,8 @@ Arquivo com classes importantes, que resolvem alguns problemas do wx principalme
 """
 import wx
 from threading import *
+
+
 # Adaptado de http://stackoverflow.com/questions/4709087/wxslider-with-floating-point-values
 class FloatSlider(wx.Slider):
     """
@@ -88,6 +90,7 @@ class FloatSlider(wx.Slider):
             
         self.SetValue(valor)
 
+
 class DataGen(object):
     """
     Classe que gera uma lista dos valores de um stream
@@ -108,13 +111,17 @@ class MyThread(Thread):
         self.time = time
         self.window = window
         self._parar = False
-
     def run(self):
         while not self.stopped.wait(self.time/1000.0):
+           if self._parar:
+               return
            self.func(self.window)
     def stop(self):
         self._parar = True
-        
+    def __del__(self):
+        self.parar = True
     def start(self):
+        if self._parar:
+            self.__init__(self.time, self.func, self.window)
         self._parar = False
         Thread.start(self)

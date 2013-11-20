@@ -3,10 +3,9 @@
 Arquivo que cuida da execução do Áudio, assim como a aplicação dos filtros
 """
 
-from audiolazy import Stream, Streamix, AudioIO, CascadeFilter, line, thub, tee
+from audiolazy import Stream, Streamix, AudioIO, CascadeFilter, line, chunks
 import filters
-import time
-import Tkinter as tkinter
+#chunks.size = 16
 
 # Classe adaptada de https://github.com/danilobellini/audiolazy/blob/master/examples/keyboard.py
 class ChangeableStream(Stream):
@@ -16,11 +15,11 @@ class ChangeableStream(Stream):
   def __iter__(self):
     while True:
       self.last = next(self._data)
-      yield self.last
+      yield self.last 
       
       
 ms = 1e-3 * filters.s
-class Player():
+class Player:
     """
     Classe Player, gerencia um player de Audio.
     É destruído no STOP.
@@ -46,9 +45,11 @@ class Player():
         self.rate = rate
         self.player = AudioIO()
         self.streamix = Streamix(True)
-        self.input = ChangeableStream(self.player.record(nchannels=ncanais,rate=rate))
+        self.input = ChangeableStream(self.player.record(nchannels=ncanais,rate=self.rate))
+        self.input.last = 0.
         self.stream = ChangeableStream(self.filter(self.input))
-        self.player.play(self.streamix)        
+        self.stream.last = 0.
+        self.player.play(self.streamix, rate=self.rate)        
         self.streamix.add(0,self.stream)
         
         
@@ -68,32 +69,19 @@ class Player():
         """
         Muda o filtro aplicado, garantindo que não haja um "click" ao fazer isso
         """
-        #window.pausa_grafico = True
-
-
-        self.chamando = True
+        #self.chamando = True
         novo_filtro = CascadeFilter(novos_filtros)
-        #self.filter = novo_filtro
-        #ult = len(self.stream)-1        
-        #self.cs[ult].limit(0)#.append(line(self.release,last,0))
-        #self.cs.append(ChangeableStream(1))
-        #self.stream.append(Stream(dados)*self.cs[ult+1])
-        #self.stream[ult+1].last = 0.0
         last = self.stream.last
         self.stream.limit(0).append(line(self.release,last,0))      
+                
         self.stream = ChangeableStream(novo_filtro(self.input))
-        self.streamix.add(0, self.stream)
+        self.stream.last = last
+        self.streamix.add(0, self.stream)  
         
-        #novo_mix = Streamix()
-        #novo_mix.add(0,self.stream)
-        #self.player.play(novo_mix)
-        #window.pausa_grafico = False    
-        
-           
     def __del__(self):
         if not self.player.finished:
             self.player.close()
-            self.playerGrava.close()
+            #self.playerGrava.close()
     def pausar (self):
         """
         Para o player
