@@ -186,8 +186,9 @@ class main_window(wx.Frame):
         self.menubar.EnableTop(1, False)
         self.botoes_pause()
         if self.pedal is None:
-            self.pedal = sc.SerialData()
-            self.pedal.start()
+             self.pedal = sc.SerialData(func_proximo=lambda: self.OnNext(None),
+                                   func_anterior=lambda: self.OnPrevious(None))
+             self.pedal.start()
         filters.pedal = self.pedal.pedal
         #self.toolbar.SetToolNormalBitmap(wx.ID_UP ,wx.Bitmap('images/play.png'))
         

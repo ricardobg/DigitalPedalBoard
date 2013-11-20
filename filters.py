@@ -176,9 +176,22 @@ def compressor(threshold=.5, slope=.5):
     inst.vparams[0] = threshold
     inst.vparams[1] = slope
     return inst
-  
 
+def expander(sig,threshold,slope):
+      sig = thub(sig, 2)
+      return sig * Stream((slope + threshold*(1 - slope)/el) if (el <= threshold and el > 0) else 1.
+                      for el in envoltoria(sig))
 
+def filtro_expander(threshold=.5, slope=.5):
+    """ 
+    Atenua os sons a abaixo de certo limiar com uma tangente
+    """
+    dic = {u"Limiar":(.5,float,(0,1)),
+           u"Tangente":(.5,float,(0,1))}
+    inst = Filtro(expander, dic, u"Expander")
+    inst.vparams[0] = threshold
+    inst.vparams[1] = slope
+    return inst
 # DISTORÇÕES
   
 @tostream
@@ -239,7 +252,7 @@ class Filtro:
 
 
     filtros = {u"Filtros Básicos": (passa_altas,passa_baixas,passa_tudo, amplificador)
-            , u"Limitadores": (limitador,compressor)
+            , u"Limitadores": (limitador,compressor,filtro_expander)
     
                 , u"Distorções": (dist_wire,)
                 , u"Delays": (eco, filtro_delay_variavel, o_flanger)                
@@ -258,13 +271,6 @@ def the_resonator (signal,freq,band):
 """
 Atenua as partes abaixo de certo limite
 """
-def expander(sig,threshold,slope):
-      sig = thub(sig, 2)
-      size=256
-      env=envelope.rms
-      cutoff=pi/2048
-      return sig * Stream(slope if el <= threshold else 0
-                      for el in maverage(size)(env(sig, cutoff=cutoff)) )
 
 """
 Atenua partes do sinal maior do que certo limite
