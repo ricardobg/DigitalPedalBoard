@@ -1,3 +1,0 @@
-
-
-print "ola em python"
