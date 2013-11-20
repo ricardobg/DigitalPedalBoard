@@ -6,16 +6,19 @@ from audiolazy import ControlStream
 class SerialData (threading.Thread):
     """
     Classe para ler os dados enviados pela porta serial pelo Arduino
-    
-
     Seu atributo pedal contem um ControlStream usado para alterar parâmetros "on the fly" de algum filtro
-    O atributo é
     """
+    
+   
     def __init__(self, porta='COM8', data_rate=9600, padrao_pedaleira=0.1, func_proximo=None
                  , func_anterior=None, limiar_superior_pedal=650):
         """
         Inicia a leitura dos dados assim como a porta
-        porta: A porta Serial em que o Arduino está
+        
+        porta: A porta Serial em que o Arduino está.
+        Usando Windows:  Em Gerenciador de Dispositivos -> Portas (COM e LPT) Veja o nome em parênteses
+        Usando Linux dmesg | grep tty, coloque porta como /dev/tty..        
+        
         data_rate: quantos bits/segundo devem ser lidos
         padrao_pedaleira: Valor padrão para o pedal de expressão quando ele esta desligado
         func_proximo: Função que muda para o próximo filtro

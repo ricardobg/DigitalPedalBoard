@@ -4,7 +4,7 @@ Arquivo com classes importantes, que resolvem alguns problemas do wx principalme
 """
 import wx
 from threading import *
-
+from player import *
 
 # Adaptado de http://stackoverflow.com/questions/4709087/wxslider-with-floating-point-values
 class FloatSlider(wx.Slider):
@@ -111,6 +111,7 @@ class MyThread(Thread):
         self.time = time
         self.window = window
         self._parar = False
+        #self.player =Player
     def run(self):
         while not self.stopped.wait(self.time/1000.0):
            if self._parar:

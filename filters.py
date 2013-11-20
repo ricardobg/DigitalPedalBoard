@@ -47,15 +47,53 @@ def eco(delay=0.001):
     inst.vparams[0] = delay
     return inst
 
-
-
+@tostream
+def the_flang(sig, freq, lag):
+    posicao = lambda senoide: int((lag*s/2000.0)*(senoide+1))
+    senoide = sinusoid(freq*Hz,phase=-pi/2)  
+    ms = 1e-3*s
+    lista = zeros().take(lag * ms + 1) 
+    tam = len(lista)-1
+    for el,v in izip(sig,senoide):
+        lista.append(el)
+        lista.pop(0)
+        yield (el + lista[tam-posicao(v)])/2
+def o_flanger(freq=0.3,lag=2):
+    """
+    Flanger
+    """
+    dic = {u"Frequência (mHz)":(.3,float,(.01,5))
+        , u"Lag (ms)":(2,float,(1,50))}
+    inst = Filtro(the_flang, dic, u"Flanger")
+    inst.vparams[0] = freq
+    inst.vparams[1] = lag
+    return inst
+    
+def delay_variavel(sig, freq_var, lag=2.):
+    posicao = lambda valor: int((lag*s/1000.0)*(valor))
+    ms = 1e-3*s
+    lista = zeros().take(lag * ms + 1) 
+    tam = len(lista)-1
+    for el,v in izip(sig,freq_var):
+        lista.append(el)
+        lista.pop(0)
+        yield (el + lista[tam-posicao(v)])/2
+def filtro_delay_variavel(lag=2.):
+    """
+    Delay variável com o pedal
+    """
+    dic = {u"Lag (ms)":(2.,float,(1,50))}
+    inst = Filtro(delay_variavel, dic, u"Eco Variável",True)
+    inst.vparams[0] = lag
+    return inst
+    
 
 # FILTROS BÁSICOS
 
 @tostream
 def amp(sig, ganho, ganho_max):
      for el in sig:
-         ret = el*(ganho.take()*ganho_max)            
+         ret = el*(next(iter(ganho))*ganho_max)            
          if ret > 1: yield 1.
          else: yield ret
 def amplificador(ganho_max=5.0):
@@ -158,27 +196,7 @@ def dist_wire(threshold=.5):
 
 #flanger = 1 + z^-D
 #
-@tostream
-def the_flang(sig, freq, lag):
-    posicao = lambda senoide: int((lag*s/2000.0)*(senoide+1))
-    senoide = sinusoid(freq*Hz,phase=-pi/2)  
-    ms = 1e-3*s
-    lista = zeros().take(lag * ms + 1) 
-    tam = len(lista)-1
-    for el,v in izip(sig,senoide):
-        lista.append(el)
-        lista.pop(0)
-        yield (el + lista[tam-posicao(v)])/2
-def o_flanger(freq=0.3,lag=2):
-    """
-    Flanger
-    """
-    dic = {u"Frequência (mHz)":(.3,float,(.01,5))
-        , u"Lag (ms)":(2,float,(1,50))}
-    inst = Filtro(the_flang, dic, u"Flanger")
-    inst.vparams[0] = freq
-    inst.vparams[1] = lag
-    return inst
+
     
 #freq ~ 100mHz
 #lag < 8ms
@@ -224,7 +242,7 @@ class Filtro:
             , u"Limitadores": (limitador,compressor)
     
                 , u"Distorções": (dist_wire,)
-                , u"Delays": (eco, o_flanger)                
+                , u"Delays": (eco, filtro_delay_variavel, o_flanger)                
                 }
         
 
@@ -266,9 +284,3 @@ def teste (samplefreq=44100):
 def distortion1 (sig):
     gen = 10 + 5*sinusoid(5*Hz)    
     return atan(sig*gen)/(pi/2)
-
-#Flanger -> Sinal + sinal c/ delay variante
-def flanger (sig):
-    variante = line(10.0*s,10.0*s/1000.0,30.0*s/1000.0)
-    sig = thub(sig, 2)
-    return sig 

@@ -5,7 +5,7 @@ Arquivo que cuida da execução do Áudio, assim como a aplicação dos filtros
 
 from audiolazy import Stream, Streamix, AudioIO, CascadeFilter, line, chunks
 import filters
-#chunks.size = 16
+#chunks.size = 256
 
 # Classe adaptada de https://github.com/danilobellini/audiolazy/blob/master/examples/keyboard.py
 class ChangeableStream(Stream):
@@ -16,7 +16,6 @@ class ChangeableStream(Stream):
     while True:
       self.last = next(self._data)
       yield self.last 
-      
       
 ms = 1e-3 * filters.s
 class Player:
