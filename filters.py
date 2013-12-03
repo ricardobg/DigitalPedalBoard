@@ -43,7 +43,7 @@ def eco(delay=0.001):
     Retorna uma instância do Eco
     """
     dic = {u"Intervalo (s)":(0.2,float,(0,5))}
-    inst = Filtro(echo, dic, u"Eco")
+    inst = Filtro(echo, dic, u"Echo")
     inst.vparams[0] = delay
     return inst
 
@@ -83,7 +83,7 @@ def filtro_delay_variavel(lag=2.):
     Delay variável com o pedal
     """
     dic = {u"Lag (ms)":(2.,float,(1,50))}
-    inst = Filtro(delay_variavel, dic, u"Eco Variável",True)
+    inst = Filtro(delay_variavel, dic, u"Variable Echo",True)
     inst.vparams[0] = lag
     return inst
     
@@ -101,7 +101,7 @@ def amplificador(ganho_max=5.0):
     Filtro que amplifica o sinal (ganho>1)
     """    
     dic = {u"Valor máximo da Amplificação":(5.0,float,(0.1,10))}
-    inst = Filtro(amp, dic, u"Amplificador", True)
+    inst = Filtro(amp, dic, u"Amplifier", True)
     inst.vparams[0] = ganho_max
     return inst
     
@@ -113,7 +113,7 @@ def passa_baixas(cutoff=700):
     Filtro que atenua altas frequências
     """
     dic = {u"Frquência de Corte (Hz)":(700,int,(0,20000))}
-    inst = Filtro(low_pass, dic, u"Passa Baixas")
+    inst = Filtro(low_pass, dic, u"Low Pass")
     inst.vparams[0] = cutoff
     return inst
 
@@ -126,7 +126,7 @@ def passa_altas(cutoff=700):
     Filtro que atenua baixas frequências
     """
     dic = {u"Frquência de Corte (Hz)":(700,int,(0,20000))}
-    inst = Filtro(high_pass, dic, u"Passa Altas")
+    inst = Filtro(high_pass, dic, u"High Pass")
     inst.vparams[0] = cutoff
     return inst
     
@@ -140,7 +140,7 @@ def passa_tudo(cutoff=700):
     """
    
     dic = {u"Frquência de 'Corte' (Hz)":(700,int,(0,20000))}
-    inst = Filtro(all_pass, dic, u"Passa Tudo")
+    inst = Filtro(all_pass, dic, u"All Pass")
     inst.vparams[0] = cutoff
     return inst
     
@@ -158,7 +158,7 @@ def limitador(threshold=.5):
     Filtro limitador. Limita as amplitudes ao limiar
     """
     dic = {u"Limiar":(.5,float,(0,1))}
-    inst = Filtro(the_limiter, dic, u"Limitador")
+    inst = Filtro(the_limiter, dic, u"Limiter")
     inst.vparams[0] = threshold
     return inst
 
@@ -214,7 +214,7 @@ def filtro_senoide(freq=700):
     Multiplica por senóide
     """
     dic = {u"Frequência (Hz)":(700,float,(0,20000))}
-    inst = Filtro(senoide, dic, u"Senóide")
+    inst = Filtro(senoide, dic, u"Sinusoid")
     inst.vparams[0] = freq
     return inst
 
@@ -238,7 +238,7 @@ def filtro_corta(limite=.5):
     Corta o som
     """
     dic = {u"Limite":(.5,float,(0,1))}
-    inst = Filtro(corta_var, dic, u"Cortar",True)
+    inst = Filtro(corta_var, dic, u"Cut",True)
     return inst
 
 
@@ -250,7 +250,7 @@ def filtro_mult_env(alpha=.9999):
     Corta o som
     """
     dic = {u"Alpha":(.9999,float,(0.1,.999999))}
-    inst = Filtro(mult_env, dic, u"Envoltória",False)
+    inst = Filtro(mult_env, dic, u"Envelop",False)
     return inst
 
 def the_resonator (signal,freq,band):
@@ -301,10 +301,10 @@ class Filtro:
             return (self.__fun(sig, pedal, *(tuple(self.vparams))))
 
 
-    filtros = {u"Filtros Básicos": (passa_altas,passa_baixas,passa_tudo, amplificador, filtro_corta)
-            , u"Limitadores": (limitador,compressor,filtro_expander)
+    filtros = {u"Basic Effects": (passa_altas,passa_baixas,passa_tudo, amplificador, filtro_corta)
+            , u"Limiters": (limitador,compressor,filtro_expander)
     
-                , u"Distorções": (dist_wire,filtro_senoide_var,filtro_senoide, filtro_mult_env, filtro_res)
+                , u"Distortions": (dist_wire,filtro_senoide_var,filtro_senoide, filtro_mult_env, filtro_res)
                 , u"Delays": (eco, filtro_delay_variavel, o_flanger)                
                 }
         
