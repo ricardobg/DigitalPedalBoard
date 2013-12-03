@@ -140,17 +140,18 @@ filtros = {u"Basic Effects": (passa_altas,passa_baixas,passa_tudo, amplificador,
               }
 ```
 
-It's a dictionary that contains effect_group: (effect1,effect2,effect3). You can create a new group or add your effects to an existing group. What you need to add is just the name of the function that contains information about your filter.
+It's a dictionary that contains effect_group: (effect1,effect2,effect3,...). You can create a new group or add your effects to an existing group. What you need to add is just the name of the function that contains information about your filter.
 
 Now you are ready to go, start the gui.py program and test your own effects !
 
 
 ##Setting your ARM
 
-Now, let's head to the physical pedalboard. We'll assume that you already have the circuit working (as we said, soon we'll post our circuit schematic). The python file that handles the communication with the Arduino is the serialcom.py
-That file uses the serial port to get the data, be sure to program your ARM to send data through Serial port using the following code: 
+Now, let's head to the physical pedalboard. We'll assume that you already have the circuit working (as we said, soon we'll post our circuit schematic). The python file that handles the communication with the Arduino is the serialcom.py.
+That file uses the Serial port to get the data, so be sure to program your ARM to send data through Serial port using the following code: 
 (identification,value). Where identification can be:
 1: One of the foot switches is pressed, and the value can assume 1 (go to next effect) or 2 (go to previous effect)
+
 2: The expression pedal state changed. The value can assume any integer between 0 and limiar_superior_pedal (which you can define).
 
 
