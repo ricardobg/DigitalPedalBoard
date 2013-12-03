@@ -55,11 +55,20 @@ Now you have everything you need to get started.
 ##Getting Started
 
 Start the gui.py program (python gui.py), you'll see something like this:
-![alt text][logo]
 
-[logo]: https://github.com/RicardoBoccoliGallego/DigitalPedalBoard/blob/master/screenshots/initial_screen.jpg
-
+![alt-text](https://github.com/RicardoBoccoliGallego/DigitalPedalBoard/blob/master/screenshots/initial_screen.png?raw=true)
 
 
+In the middle-left area we have our effects. We separated them in four categories, you can change that if you want, but it isn't so important.
+A effect has 3 things: Its name, a checkbox (you can activate or desactivate) and a button to edit its parameters.
 
+In the right area we have the buttons previous,next,stop and play. The next and previous buttons are used to change effects when you are in preset mode. We also have two graphs which show the input and the output audio.
+
+To start testing, plug your guitar or bass in your computer (and configure it as the main audio input) or use your microfone and press the play button. Pretty cool, right ?
+
+Know, try out applying some effects by pressing its checkboxes (we recommend to start with the echo chaging the echo time to 1 second)
+
+The program has basically 3 modes: Regular Mode (the one we were using), Preset Mode and Preset Editing Mode.
+
+####Regular Mode
 
