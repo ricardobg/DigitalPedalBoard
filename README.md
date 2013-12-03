@@ -15,7 +15,7 @@ But if you want to create your own effects and make your physical pedalboard, yo
  - Basic knowledge in DSP (Digital Signal Processing), you only have to understand how to make things work and to understand some basic filters
  - AudioLazy package: [AudioLazy](https://github.com/danilobellini/audiolazy "AudioLazy")
  - If you want to build a physical pedalboard, you'll need some knowledge in eletrical circuits (no big deal, you won't need to know how to analyze transient ciruits and complicated stuff)
- - If want to build everything by yourself, you may need to know how to program an ARM (we recommend [Arduino](http://arduino.cc/ "Arduino")), but you can choose any ARM you want
+ - If you want to build everything by yourself, you may need to know how to program a microcontroller (we recommend [Arduino](http://arduino.cc/ "Arduino")), but you can choose any microcontroller you want
 
 
 We haven't translated everything to English yet, so if you know some Portugues, it would be very helpful.
@@ -68,9 +68,9 @@ A effect has 3 things: Its name, a checkbox (you can activate or desactivate) an
 
 In the right area we have the buttons previous, next, stop and play. The next and previous buttons are used to change effects when you are in preset mode. We also have two graphs which show the input and the output audio.
 
-To start testing, plug your guitar or bass in your computer (and configure it as the main audio input) or use your microfone, press the play button and listen. Pretty cool, right ?
+To start testing, plug your guitar or bass in your computer (and configure it as the main audio input) or use your microphone, press the play button and listen. Pretty cool, right ?
 
-Know, try out applying some effects by pressing its checkboxes (we recommend to start with the echo chaging the echo time to 1 second).
+Now, try out applying some effects by pressing its checkboxes (we recommend to start with the echo and chaging the echo time to 1 second).
 
 The program has basically 3 modes: Regular Mode (the one we were using), Preset Editing Mode and Preset Mode. Below we'll explain them.
 
@@ -91,7 +91,7 @@ This mode plays a preset. You can see the applied effects and go to the next or 
 To go to this mode, you can press the play button when editing your preset or go to Preset -> Play Preset.
 
 
-You can also save your presets and share it if your friends !
+You can also save your presets and share them if your friends !
 
 
 ##Making your own effects
@@ -110,7 +110,7 @@ def effect_information(params=default_values):
     return instance
 ```
 
-The first function (signal_processing_function) is the function that will receive the input, apply the effect and return the output. You can do it in two ways: return the entire processed signal or process sample by sample (you'll have to write @tostream before the function and iterate over the input samples). Here we have two examples:
+The first function (`signal_processing_function`) is the function that will receive the input, apply the effect and return the output. You can do it in two ways: return the entire processed signal or process sample by sample (you'll have to write `@tostream` before the function and iterate over the input samples). Here we have two examples:
 ```python
 def multiply_entire_signal(input, number):
    return input * number
@@ -125,7 +125,7 @@ def skip_samples(input, skip_rate):
       i+=1
 ```
 
-The second function (effect_information) defines some information about the effect. It defines the effect name, its parameters and if it uses (True) or not (False) the expression pedal. When you use the expression pedal you'll need to declare in the signal_processing_function a variable that will contain that data, and it must be the first variable after the input.
+The second function `effect_information` defines some information about the effect. It defines the effect name, its parameters and if it uses (True) or not (False) the expression pedal. When you use the expression pedal you'll need to declare in the `signal_processing_function` a variable that will contain that data, and it must be the first variable after the input. Be aware that the pedal variable is a `ChangeableStream` (take a look at the AudioLazy documentation) and its value is a float that ranges from 0 to 1.
 
 
 After creating your <del>Hello World</del> cool effects, you'll need to add them to your filter's list, in the filters.py file, try to find something like this:
@@ -139,15 +139,15 @@ filtros = {u"Basic Effects": (passa_altas,passa_baixas,passa_tudo, amplificador,
               }
 ```
 
-It's a dictionary that contains effect_group: (effect1,effect2,effect3,...). You can create a new group or add your effects to an existing group. What you need to add is just the name of the function that contains information about your filter.
+It's a dictionary that contains `"effect_group": (effect1,effect2,effect3,...)` You can create a new group or add your effects to an existing group. What you need to add is just the name of the function that contains information about your filter.
 
 Now you are ready to go, start the gui.py program and test your own effects !
 
 
-##Setting your ARM
+##Setting your Microcontroller
 
 Now, let's head to the physical pedalboard. We'll assume that you already have the circuit working (as we said, soon we'll post our circuit schematic). The python file that handles the communication with the Arduino is the serialcom.py.
-That file uses the Serial port to get the data, so be sure to program your ARM to send data through Serial port using the following code: 
+That file uses the Serial port to get the data, so be sure to program your microcontroller to send data through Serial port using the following code: 
 (identification,value). Where identification can be:
 
 1: One of the foot switches is pressed, and the value can assume 1 (go to next effect) or 2 (go to previous effect).
@@ -156,14 +156,16 @@ That file uses the Serial port to get the data, so be sure to program your ARM t
 
 
 ####Arduino
-You'll find the Arduino code in ArduinoProject/ArduinoProject.ino. You can change the code, but be sure to connect the wires in the correct pins. When you open the Arduino Software, take a look at the Serial Port the Arduino is connected to and go to the serialcom.py file and in the init function change porta='COM8' to porta='ARDUINO_PORT', usually on Windows the port can be COM9,COM12,... and on Linux you'll have a text like this: '/dev/tty...'. You'll also need to test the maximum value that the Arduino is sending (you can figure out that by opening the Serial Console in the Arduino Software and pressing the expression pedal as hard as you can), when you have that value, change the limiar_superior_pedal=650 to limiar_superior_pedal=MAX_VALUE, where MAX_VALUE is that value you just got.
+You'll find the Arduino code in ArduinoProject/ArduinoProject.ino. You can change the code, but be sure to connect the wires in the correct pins. When you open the Arduino Software, take a look at the Serial Port the Arduino is connected to and go to the serialcom.py file and in the `__init__` function change `porta='COM8'` to `porta='ARDUINO_PORT'`, usually on Windows the port can be COM9,COM12,... and on Linux you'll have a text like this: '/dev/tty...'. You'll also need to test the maximum value that the Arduino is sending (you can figure out that by opening the Serial Console in the Arduino Software and pressing the expression pedal as hard as you can), when you have that value, change the `limiar_superior_pedal=650` to `limiar_superior_pedal=MAX_VALUE`, where MAX_VALUE is that value you just got.
 
 
-####Others ARM
-Be sure to send the data by the Serial port. After that, figure out what Serial port you ARM is connected to, the data rate and the maximum value that the expression pedal is sending. Now you'll use these values to set the default values of the init function.
+####Others Microcontrollers
+Be sure to send the data by the Serial port. After that, figure out what Serial port you microcontroller is connected to, the data rate and the maximum value that the expression pedal is sending. Now you'll use these values to set the default values of the `__init__` function.
 
 
-Your ARM now should be ready, start the gui.py program, play a preset and try it out !
+You can change the way to send data to something cooler (like wireless communication or USB), to do that you'll only need to modify the serialcom.py file (and yes, its name will lose all its sense of being so). You'll
+
+Your microcontroller now should be ready, start the gui.py program, play a preset and try it out !
 
 ----
 
