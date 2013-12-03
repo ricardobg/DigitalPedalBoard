@@ -17,20 +17,18 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """
-Arquivo para gerenciar o salvamento e carregamento de dados
-Gerencia valores padrão e também arquivos de preset
+File that handles saving and loading data.
+It manages the default values and preset files.
 """
-
 import pickle
 
-arquivo_default = "default.data"
+default_file = "default.data"
 
 
 def load_preset(preset_file):
     """
-    Carrega um preset, retorna None se não encontrar o arquivo ou arquivo inválido.
-    As configurações do preset (parametros dos filtros) são salvas também
-    e não interferem nos defaults dos filtros.
+    Loads a preset (list of list of filters). 
+    Returns None if the file can't be opened.
     """
     try:
         arquivo = open(preset_file,"r")
@@ -42,7 +40,8 @@ def load_preset(preset_file):
 
 def save_preset(preset_file, preset_list):
     """
-    Salva um preset
+    Saves a preset. 
+    The paramaters of the preset effects don't interfere on the default values.
     """
     pickle.dump(preset_list,open(preset_file,"w"))
 
@@ -50,26 +49,25 @@ def save_preset(preset_file, preset_list):
 
 def load_defaults(lista_filtros):
     """
-    Lê a lista de Defaults, carregando os filtros com os padrões
+    Reads the default values file, and loads it into the filters.
     """
     try:
-        arquivo = open(arquivo_default,"r")
+        arquivo = open(default_file,"r")
         padroes = pickle.load(arquivo)
         for filtro in lista_filtros:
             if padroes.has_key(filtro.name):
                 filtro.vparams = padroes[filtro.name]
-                #filtro.update_default()
     except:
         pass
 
 
 def salva_defaults(lista_filtros):
     """
-    Função que salva os valores default
+    Saves the default values.
     """
     padroes = {}
     for filtro in lista_filtros:
         padroes[filtro.name] = filtro.vparams
-    pickle.dump(padroes,open(arquivo_default,"w"))
+    pickle.dump(padroes,open(default_file,"w"))
 
     

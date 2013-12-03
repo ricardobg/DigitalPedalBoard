@@ -17,19 +17,21 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """
-Arquivo para guardar os filtros criados.
-Todo filtro é uma instância da classe Filtro, que além
-da função que trata o sinal, contém outras informações,
-como parâmetros, nome, uso do pedal de expressão.
+File to keep the created filters (effects).
+Every filter is an 'Filtro' instance which contains the function that process
+the input and other informations, like parameters, name and if it uses the
+expression pedal.
 """
 from audiolazy import *
 rate = 44100
 s,Hz = sHz(rate)
-#chunks.size = 16
 
 
 @tostream
 def envoltoria(sig,alpha=.9999):
+    """
+    Returns the envelop of the signal with exponential decay.
+    """
     last = 0.    
     for el in sig:
         if el < last: 
@@ -42,8 +44,8 @@ def envoltoria(sig,alpha=.9999):
 
 
 """
-Funções que retornam Stream seguidas pela função que instancia o seu filtro com
-seus parâmetros, nome, etc.
+Functions that return a Stream followed by the function which instantiates the
+filter with its parameters, name, etc.
 """
 
 # DELAYS
@@ -57,9 +59,11 @@ def echo (sig, echo_time):
     return smixer
 def eco(delay=0.001):
     """
-    Retorna uma instância do Eco
+    Returns an echo filter.
+    Your signal in the time t is: I(t) + I(t-delay), where I() is your input
+    signal.
     """
-    dic = {u"Intervalo (s)":(0.2,float,(0,5))}
+    dic = {u"Delay (s)":(0.2,float,(0,5))}
     inst = Filtro(echo, dic, u"Echo")
     inst.vparams[0] = delay
     return inst
@@ -77,9 +81,10 @@ def the_flang(sig, freq, lag):
         yield (el + lista[tam-posicao(v)])/2
 def o_flanger(freq=0.3,lag=2):
     """
-    Flanger
+    Flanger effect.
+    Its like the echo, but the delay time varies sinusoidally.
     """
-    dic = {u"Frequência (mHz)":(.3,float,(.01,5))
+    dic = {u"Frequency (mHz)":(.3,float,(.01,5))
         , u"Lag (ms)":(2,float,(1,50))}
     inst = Filtro(the_flang, dic, u"Flanger")
     inst.vparams[0] = freq
@@ -97,7 +102,8 @@ def delay_variavel(sig, freq_var, lag=2.):
         yield (el + lista[tam-posicao(v)])/2
 def filtro_delay_variavel(lag=2.):
     """
-    Delay variável com o pedal
+    Variable echo. The delay time is as big as the expression pedal is
+    pressed.
     """
     dic = {u"Lag (ms)":(2.,float,(1,50))}
     inst = Filtro(delay_variavel, dic, u"Variable Echo",True)
@@ -105,7 +111,7 @@ def filtro_delay_variavel(lag=2.):
     return inst
     
 
-# FILTROS BÁSICOS
+# Basic Filters
 
 @tostream
 def amp(sig, ganho, ganho_max):
@@ -115,9 +121,9 @@ def amp(sig, ganho, ganho_max):
          else: yield ret
 def amplificador(ganho_max=5.0):
     """
-    Filtro que amplifica o sinal (ganho>1)
+    Amplifier. Its gains varies with the expression pedal.
     """    
-    dic = {u"Valor máximo da Amplificação":(5.0,float,(0.1,10))}
+    dic = {u"Maximum gain":(5.0,float,(0.1,10))}
     inst = Filtro(amp, dic, u"Amplifier", True)
     inst.vparams[0] = ganho_max
     return inst
@@ -127,9 +133,9 @@ def low_pass (signal, cutoff):
         return filt(signal)
 def passa_baixas(cutoff=700):
     """ 
-    Filtro que atenua altas frequências
+    Low pass filter (It mitigates high frequencies)
     """
-    dic = {u"Frquência de Corte (Hz)":(700,int,(0,20000))}
+    dic = {u"Cutoff frequency (Hz)":(700,int,(0,20000))}
     inst = Filtro(low_pass, dic, u"Low Pass")
     inst.vparams[0] = cutoff
     return inst
@@ -140,9 +146,9 @@ def high_pass (signal,cutoff):
         return filt(signal)
 def passa_altas(cutoff=700):
     """  
-    Filtro que atenua baixas frequências
+    High pass filter (It mitigates low frequencies)
     """
-    dic = {u"Frquência de Corte (Hz)":(700,int,(0,20000))}
+    dic = {u"Cutoff frequency (Hz)":(700,int,(0,20000))}
     inst = Filtro(high_pass, dic, u"High Pass")
     inst.vparams[0] = cutoff
     return inst
@@ -153,17 +159,18 @@ def all_pass (signal, cutoff):
         return filt(signal)
 def passa_tudo(cutoff=700):
     """ 
-    Filtro que não muda a intensidade, apenas a fase da sua entrada
+    All pass filter. It doesn't mitigate any frequency, but changes its phase.
+    Useful when creating a phaser.
     """
    
-    dic = {u"Frquência de 'Corte' (Hz)":(700,int,(0,20000))}
+    dic = {u"'Cutoff frequency'  (Hz)":(700,int,(0,20000))}
     inst = Filtro(all_pass, dic, u"All Pass")
     inst.vparams[0] = cutoff
     return inst
     
     
     
-# LIMITADORES
+# LIMITERS
     
 def the_limiter(sig,threshold):
         sig = thub(sig, 2)
@@ -172,23 +179,24 @@ def the_limiter(sig,threshold):
 
 def limitador(threshold=.5):
     """ 
-    Filtro limitador. Limita as amplitudes ao limiar
+    Limiter filter. It bounds the envelop of your signal between 
+    -thereshold and +thereshold.
     """
-    dic = {u"Limiar":(.5,float,(0,1))}
+    dic = {u"Threshold":(.5,float,(0,1))}
     inst = Filtro(the_limiter, dic, u"Limiter")
     inst.vparams[0] = threshold
     return inst
 
 def the_compressor(sig,threshold,slope):
         sig = thub(sig, 2)
-        return sig * Stream(1. if el <= threshold else (slope + threshold*(1 - slope)/el)
-                for el in envoltoria(sig))
+        return sig * Stream(1. if el <= threshold 
+        else (slope + threshold*(1 - slope)/el) for el in envoltoria(sig))
 def compressor(threshold=.5, slope=.5):
     """ 
-    Atenua os sons a partir de certo limiar com uma tangente
+    Above the threshold, it mitigates the signal with a tangent.
     """
-    dic = {u"Limiar":(.5,float,(0,1)),
-           u"Tangente":(.5,float,(0,1))}
+    dic = {u"Threshold":(.5,float,(0,1)),
+           u"Tangent":(.5,float,(0,1))}
     inst = Filtro(the_compressor, dic, u"Compressor")
     inst.vparams[0] = threshold
     inst.vparams[1] = slope
@@ -196,20 +204,24 @@ def compressor(threshold=.5, slope=.5):
 
 def expander(sig,threshold,slope):
       sig = thub(sig, 2)
-      return sig * Stream((slope + threshold*(1 - slope)/el) if (el <= threshold and el > 0) else 1.
-                      for el in envoltoria(sig))
+      return sig * Stream((slope + threshold*(1 - slope)/el) 
+      if (el <= threshold and el > 0) else 1. for el in envoltoria(sig))
 
 def filtro_expander(threshold=.5, slope=.5):
     """ 
-    Atenua os sons a abaixo de certo limiar com uma tangente
+    If you are strict, this isn't an expander because it should increase the 
+    signal above a threshold. But this filter mitigates the signal below
+    the threshold with a tangent.    
     """
-    dic = {u"Limiar":(.5,float,(0,1)),
-           u"Tangente":(.5,float,(0,1))}
+    dic = {u"Threshold":(.5,float,(0,1)),
+           u"Tangent":(.5,float,(0,1))}
     inst = Filtro(expander, dic, u"Expander")
     inst.vparams[0] = threshold
     inst.vparams[1] = slope
     return inst
-# DISTORÇÕES
+    
+    
+# DISTORTIONS
   
 @tostream
 def distwire(sig,threshold):
@@ -217,9 +229,11 @@ def distwire(sig,threshold):
         if builtins.abs(el) < threshold: yield el
         else: yield el/builtins.abs(el) - el
 def dist_wire(threshold=.5):
-    """ Distorção Wire
+    """ 
+    Wire Distortion.
+    We made this up, it reverses your signal above a threshold.
     """
-    dic = {u"Limiar":(.5,float,(0,1))}
+    dic = {u"Threshold":(.5,float,(0,1))}
     inst = Filtro(distwire, dic, u"Distwire")
     inst.vparams[0] = threshold
     return inst
@@ -228,9 +242,9 @@ def senoide(sig,freq):
     return sig*sinusoid(freq*Hz)    
 def filtro_senoide(freq=700):
     """ 
-    Multiplica por senóide
+    Multiplies your signal by a sinusoid.
     """
-    dic = {u"Frequência (Hz)":(700,float,(0,20000))}
+    dic = {u"Frequency (Hz)":(700,float,(0,20000))}
     inst = Filtro(senoide, dic, u"Sinusoid")
     inst.vparams[0] = freq
     return inst
@@ -239,9 +253,11 @@ def senoide_var(sig,freq,freq_max):
     return sig*sinusoid(freq*freq_max*Hz)    
 def filtro_senoide_var(freq_max=10000):
     """ 
-    Multiplica por senóide variável
+    Ring modulation effect.    
+    It multiplies your signal by a variable sinusoid. The sinusoid's frequency
+    varies with the expression pedal.
     """
-    dic = {u"Frequência Máxima (Hz)":(10000,float,(0,20000))}
+    dic = {u"Maximum Frequency(Hz)":(10000,float,(0,20000))}
     inst = Filtro(senoide_var, dic, u"Ring modulation",True)
     return inst
 
@@ -252,9 +268,9 @@ def corta_var(sig, corta, limite):
         else: yield el
 def filtro_corta(limite=.5):
     """ 
-    Corta o som
+    Cuts the sound above a threshold.
     """
-    dic = {u"Limite":(.5,float,(0,1))}
+    dic = {u"Threshold":(.5,float,(0,1))}
     inst = Filtro(corta_var, dic, u"Cut",True)
     return inst
 
@@ -264,7 +280,7 @@ def mult_env(sig,alpha):
 
 def filtro_mult_env(alpha=.9999):
     """ 
-    Corta o som
+    Multiplies your signal by its envelop.
     """
     dic = {u"Alpha":(.9999,float,(0.1,.999999))}
     inst = Filtro(mult_env, dic, u"Envelop",False)
@@ -276,34 +292,35 @@ def the_resonator (signal,freq,band):
     
 def filtro_res(freq=900,band=5):
     """
-    Ressonador
+    Resonator effect.
+    When playing some chords, the output oscillates.
     """
-    dic = {u"Frequência":(900,float,(0,20000))
-    , u"Banda": (5,float,(1,100))}
+    dic = {u"Frequency (Hz)":(900,float,(0,20000))
+    , u"Bandwidth (Hz)": (5,float,(1,100))}
     inst = Filtro(the_resonator, dic, u"Resonator",False)
     return inst
     
-# Variável ControlStream (ou inteiro) com a entrada do pedal
+# ControlStream that contains the expression pedal value.
 pedal = ControlStream(0.1)
      
 class Filtro:
     """ 
-    Classe para os filtros
-    params: Contém o dicionário que caracteriza o filtro
-    vparams: Valores padrão dos parâmetros
-    name: nome do filtro
-    usa_pedal: Indica se o filtro usa ou não o valor do pedal de expressão
+    Filters class.
+    params: It contains the dictionary that distinguish the filter.
+    vparams: Default values for the parameters.
+    name: Filter's name.
+    usa_pedal: Indicates whether the expression pedal will be used or not.
       
     """
     def __init__(self, fun, dic, name, usa_pedal=False):
         """        
-        fun: Uma função que recebe um Stream e retorna outro Stream (além de outros parametros)
-        dic: Dicionário que dá um nome para cada parametro do filtro e 
-        o seu valor é uma tupla que contém (valor_padrao, tipo, (valor_inicial,valor_final))
-         é uma tupla com os valores dos parâmetros
+        fun: The function which process the input and returns an output.
+        dic: Dictionary which names every filter parameter and its value is a
+        tuple that contains (default_value, data_type, (min_value,max_value)).
+        name: The filter's name.
         
-        A variável estatica filtros contém um dicionário definido pelo grupo de filtros e por uma tupla contendo
-        as funções que instanciam os filtros
+        The filtros variable contains a dictionary defined by the filters
+        group and a tuple with the filters function.
         """
         self.params = dic
         self.__fun = fun
