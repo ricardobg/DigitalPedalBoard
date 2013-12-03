@@ -36,7 +36,7 @@ Soon we will post the eletrical components and connections of our pedalboard.
 
 Ok, let's head to the main stuff: Making things work !
 
-1. You'll need to install Python 2.7 on your computer. If you have Windows (our sincere condolences) you may want to install Python by using this program: [WinPython](https://code.google.com/p/winpython/ "WinPython"). If you have Linux or Mac, just download Python 2.7 from the official site: http://www.python.org/getit/
+1. You'll need to install Python 2.7 on your computer. If you have Windows (our sincere condolences) you may want to install Python by using this program: [WinPython](https://code.google.com/p/winpython/ "WinPython"). If you have Linux or Mac, just download Python 2.7 from the official website: http://www.python.org/getit/
 
 2. In this project we used <del>a lot</del> some python packages. Here is a short list of them (you need to install them):
   - matplotlib
@@ -67,23 +67,23 @@ Start the gui.py program (python gui.py), you'll see something like this:
 In the middle-left area we have our effects. We separated them in four categories, you can change that if you want, but it isn't so important.
 A effect has 3 things: Its name, a checkbox (you can activate or desactivate) and a button to edit its parameters.
 
-In the right area we have the buttons previous,next,stop and play. The next and previous buttons are used to change effects when you are in preset mode. We also have two graphs which show the input and the output audio.
+In the right area we have the buttons previous, next, stop and play. The next and previous buttons are used to change effects when you are in preset mode. We also have two graphs which show the input and the output audio.
 
-To start testing, plug your guitar or bass in your computer (and configure it as the main audio input) or use your microfone and press the play button. Pretty cool, right ?
+To start testing, plug your guitar or bass in your computer (and configure it as the main audio input) or use your microfone, press the play button and listen. Pretty cool, right ?
 
-Know, try out applying some effects by pressing its checkboxes (we recommend to start with the echo chaging the echo time to 1 second)
+Know, try out applying some effects by pressing its checkboxes (we recommend to start with the echo chaging the echo time to 1 second).
 
-The program has basically 3 modes: Regular Mode (the one we were using), Preset Editing Mode and Preset Mode 
+The program has basically 3 modes: Regular Mode (the one we were using), Preset Editing Mode and Preset Mode. Below we'll explain them.
 
 ####Regular Mode
 
-If you just want to test the effects, this is the mode for you ! It allows you to activate and desactivate filters. When you start the program, this mode will be active. If you are in other mode and want to use this mode, just go to the menu Preset -> Back
+If you just want to test the effects, this is the mode for you ! It allows you to activate and desactivate effects. When you start the program, this mode will be active. If you are in other mode and want to use this mode, just go to the menu Preset -> Back
 
 
 ####Preset Editing Mode
 
-This mode you use when you want to edit or create new presets. If you don't know what a preset is: presets are lists of lists of effects. In other words, you'll have a numbered list (0,1,2,3,..) and any position of the list contains some effects that will be applied when you are in this position (this is very useful for playing songs). This mode isn't complicated, you can go to this mode by 3 ways: File -> New Preset, File -> Load Preset, Preset -> Edit Preset.
-When in this mode, you'll see a numbered list. You can press the next or previous button to navigate and when you are in the last position if you press next, you'll create a new position. You can also change the position by using your mouse. When you select a position, you'll only need to select the effects you want to apply and change its parameters.
+This mode is to edit and create presets. If you don't know what a preset is: presets are lists of lists of effects. In other words, you'll have a numbered list (0,1,2,3,..) and any position of the list contains some effects that will be applied when you are in this position (this is very useful for playing songs). This mode isn't complicated, you can go to this mode by 3 ways: File -> New Preset, File -> Load Preset, Preset -> Edit Preset.
+When you are in this mode, you'll see a numbered list in the right area. You can press the next or previous button to navigate and when you are in the last position if you press next, you'll create a new position. You can also change the position by using your mouse. When you select a position, you'll only need to select the effects you want to apply and change its parameters.
 
 
 ####Preset Mode
@@ -107,11 +107,11 @@ def signal_processing_function(input, params):
 def effect_information(params=default_values):
     dictionary = {u"parameter_1_name":(default_1_value,data_1_type,(min_1_value,max_1_value))
     , u"parameter_2_name":(default_2_value,data_2_type,(min_2_value,max_2_value))}
-    instance = Filtro(signal_processing_function, dic, u"FilterName", use_expression_pedal)
+    instance = Filtro(signal_processing_function, dictionary, u"FilterName", use_expression_pedal)
     return instance
 ```
 
-The first function (signal_processing_function) is the function that will receive the input, apply the effect and return the output. You can do it in two ways: return the entire processed signal or process sample by sample (you'll have to write @tostream before the function). Here two examples:
+The first function (signal_processing_function) is the function that will receive the input, apply the effect and return the output. You can do it in two ways: return the entire processed signal or process sample by sample (you'll have to write @tostream before the function and iterate over the input samples). Here we have two examples:
 ```python
 def multiply_entire_signal(input, number):
    return input * number
@@ -134,7 +134,8 @@ After creating your <del>Hello World</del> cool effects, you'll need to add them
 filtros = {u"Basic Effects": (passa_altas,passa_baixas,passa_tudo, amplificador, filtro_corta)
           , u"Limiters": (limitador,compressor,filtro_expander)
   
-              , u"Distortions": (dist_wire,filtro_senoide_var,filtro_senoide, filtro_mult_env, filtro_res)
+              , u"Distortions": (dist_wire,filtro_senoide_var,filtro_senoide, 
+              filtro_mult_env, filtro_res)
               , u"Delays": (eco, filtro_delay_variavel, o_flanger)                
               }
 ```
