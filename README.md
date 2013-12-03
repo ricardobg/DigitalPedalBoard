@@ -201,7 +201,7 @@ This is the main file, the king of the kings. It has over one thousand lines and
 This file is the one that may need more improvement than the others. And what that could be ? You could improve the interface, make it brighter, prettier and faster. You could also create new features like user defined effects group and more menus and buttons !
 
 
-We've already introduced the other two files: filters.py and serialcom.py in previous sections, so take a look at them.
+We've already introduced the other three files: filters.py, serialcom.py, ArduinoProject/ArduinoProject.ino in previous sections, so take a look at them.
 
 
 ----
