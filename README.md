@@ -55,6 +55,9 @@ Now you have everything you need to get started.
 ##Getting Started
 
 Start the gui.py program (python gui.py), you'll see something like this:
+![alt text][logo]
+
+[logo]: https://github.com/RicardoBoccoliGallego/DigitalPedalBoard/blob/master/screenshots/initial_screen.jpg
 
 
 
