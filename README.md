@@ -156,7 +156,7 @@ That file uses the Serial port to get the data, so be sure to program your micro
 
 
 ####Arduino
-You'll find the Arduino code in ArduinoProject/ArduinoProject.ino. You can change the code, but be sure to connect the wires in the correct pins. When you open the Arduino Software, take a look at the Serial Port the Arduino is connected to and go to the serialcom.py file and in the `__init__` function change `porta='COM8'` to `porta='ARDUINO_PORT'`, usually on Windows the port can be COM9,COM12,... and on Linux you'll have a text like this: '/dev/tty...'. You'll also need to test the maximum value that the Arduino is sending (you can figure out that by opening the Serial Console in the Arduino Software and pressing the expression pedal as hard as you can), when you have that value, change the `limiar_superior_pedal=650` to `limiar_superior_pedal=MAX_VALUE`, where MAX_VALUE is that value you just got.
+You'll find the Arduino code in ArduinoProject/ArduinoProject.ino. You can change the code, but be sure to connect the wires in the correct pins. When you open the Arduino Software, take a look at the Serial Port the Arduino is connected to and go to the serialcom.py file and in the `__init__` function change `porta='COM8'` to `porta='ARDUINO_PORT'`, usually on Windows the port can be COM9,COM12,... and on Linux you'll have a text like this: '/dev/tty...'. You'll also need to test the maximum value that the Arduino is sending (you can figure out that by opening the Serial Console in the Arduino Software and pressing the expression pedal as hard as you can), when you have that value, change the `limiar_superior_pedal=650` to `limiar_superior_pedal=MAX`, where MAX is that value you just got.
 
 
 ####Others Microcontrollers
