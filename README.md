@@ -60,7 +60,7 @@ Now you have everything you need to get started.
 
 Start the gui.py program (python gui.py), you'll see something like this:
 
-![alt-text](https://github.com/RicardoBoccoliGallego/DigitalPedalBoard/blob/master/screenshots/initial_screen.png?raw=true)
+![alt-text](/screenshots/initial_screen.png)
 
 
 In the middle-left area we have our effects. We separated them in four categories, you can change that if you want, but it isn't so important.
