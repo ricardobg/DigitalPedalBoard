@@ -45,7 +45,7 @@ Ok, let's head to the main stuff: Making things work !
   - numpy
   - pylab
   - audiolazy
-  - wx
+  - wxPython
   - pyserial
   
   Some of them are included in WinPython installation, you can see that by opening the "WinPython Control Panel" program.
@@ -125,7 +125,7 @@ def skip_samples(input, skip_rate):
       i+=1
 ```
 
-The second function `effect_information` defines some information about the effect. It defines the effect name, its parameters and if it uses (True) or not (False) the expression pedal. When you use the expression pedal you'll need to declare in the `signal_processing_function` a variable that will contain that data, and it must be the first variable after the input. Be aware that the pedal variable is a `ChangeableStream` (take a look at the AudioLazy documentation) and its value is a float that ranges from 0 to 1.
+The second function `effect_information` defines some information about the effect. It defines the effect name, its parameters and if it uses (True) or not (False) the expression pedal. When you use the expression pedal you'll need to declare in the `signal_processing_function` a variable that will contain that data, and it must be the first variable after the input. Be aware that the pedal variable is a `ControlStream` (take a look at the AudioLazy documentation) and its value is a float that ranges from 0 to 1.
 
 
 After creating your <del>Hello World</del> cool effects, you'll need to add them to your filter's list, in the filters.py file, try to find something like this:
@@ -152,7 +152,7 @@ That file uses the Serial port to get the data, so be sure to program your micro
 
 1: One of the foot switches is pressed, and the value can assume 1 (go to next effect) or 2 (go to previous effect).
 
-2: The expression pedal state changed. The value can assume any integer between 0 and limiar_superior_pedal (which you can define).
+2: The expression pedal state changed. The value can assume any integer between 0 and `limiar_superior_pedal` (which you can define).
 
 
 ####Arduino
@@ -166,6 +166,41 @@ Be sure to send the data by the Serial port. After that, figure out what Serial 
 You can change the way to send data to something cooler (like wireless communication or USB), to do that you'll only need to modify the serialcom.py file (and yes, its name will lose all its sense of being so). You'll also need to understand that file to make the right function calls and update everything that must be updated.
 
 Your microcontroller now should be ready, start the gui.py program, play a preset and try it out !
+
+
+##Advanced Topics
+You changed everything you could changed, created an awesome pedalboard with satelite communication, made more than 8000 effects, what now ?
+Here'll briefly explain what the project files we didn't explain do and what you could improve.
+
+####data.py
+This files handles both saving and loading data using the pickle package. Whenever you are in Regular Mode and change any filter's parameter, the program will take a snapshot of all the filters and save it in the default.data file. When you start the program, it loads that default.data filters and update the default parameters of all filters.
+This file also save and load your presets. When you change any filter's parameter while on Edit Preset Mode, this change will only be saved on its .preset file, in other words: this change will not be saved in the default.data.
+
+What you may improve ? Maybe saving the presets in the cloud. Making possible to download, upload, rate, share presets would be pretty cool.
+
+
+####lib.py
+This file handles some unrelated stuff: the `FloatSlider` class (which we didn't make, in the source code you can see the author), `DataGen` class and the `MyThread` class (yes, we completely forgot to change the name to a useful name).
+- The `FloatSlider`, as its name implies change the standard `Slider` class of the wxPython package to accept float values.
+- The `DataGen` returns a tuple with two values: the input and the output audio.
+- The `MyThread` controls the update of the input and the output graphs.
+
+
+What you may improve ? You could improve the performance of `DataGen` and `MyThread`, which is a critical point of the program.
+
+####player.py
+This file handles the audio (both recording and playing). Basically, it contains functions to play, pause and change filters while playing.
+
+What you may improve ? You may want to change the `ChangeableStream` class (yes, change the changeable) and let it faster by updating the `self.last` in the same rate of the graph update rate.
+
+
+####gui.py
+This is the main file, the king of the kings. It has over one thousand lines and despite to create the GUI (General User Interface), it also connects all the files.
+
+This file is the one that may need more improves than the others. And what that could be ? You could improve the interface, make it brighter, prettier and faster. You could also create new features like user defined effects group and more menus and buttons !
+
+
+We've already introduced the other two files: filters.py and serialcom.py in previous sections, so take a look at them.
 
 ----
 
