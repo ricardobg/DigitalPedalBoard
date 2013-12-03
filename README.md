@@ -151,13 +151,13 @@ Now, let's head to the physical pedalboard. We'll assume that you already have t
 That file uses the Serial port to get the data, so be sure to program your ARM to send data through Serial port using the following code: 
 (identification,value). Where identification can be:
 
-1: One of the foot switches is pressed, and the value can assume 1 (go to next effect) or 2 (go to previous effect)
+1: One of the foot switches is pressed, and the value can assume 1 (go to next effect) or 2 (go to previous effect).
 
 2: The expression pedal state changed. The value can assume any integer between 0 and limiar_superior_pedal (which you can define).
 
 
 ####Arduino
-You'll find the Arduino code in ArduinoProject/ArduinoProject.ino. You can change the code, but be sure to connect the wires in the correct pins. When you open the Arduino Software, take a look at the Serial Port the Arduino is connected to and go to the serialcom.py file and in the __init__ function change porta='COM8' to porta='ARDUINO_PORT', usually on Windows the port can be COM9,COM12,... and on Linux you'll have a text like this: '/dev/tty...'. You'll also need to test the maximum value that the Arduino is sending (you can figure out that by opening the Serial Console in the Arduino Software and pressing the expression pedal as hard as you can), when you have that value, change the limiar_superior_pedal=650 to limiar_superior_pedal=MAX_VALUE, where MAX_VALUE is that value you just got.
+You'll find the Arduino code in ArduinoProject/ArduinoProject.ino. You can change the code, but be sure to connect the wires in the correct pins. When you open the Arduino Software, take a look at the Serial Port the Arduino is connected to and go to the serialcom.py file and in the '__init__' function change porta='COM8' to porta='ARDUINO_PORT', usually on Windows the port can be COM9,COM12,... and on Linux you'll have a text like this: '/dev/tty...'. You'll also need to test the maximum value that the Arduino is sending (you can figure out that by opening the Serial Console in the Arduino Software and pressing the expression pedal as hard as you can), when you have that value, change the limiar_superior_pedal=650 to limiar_superior_pedal=MAX_VALUE, where MAX_VALUE is that value you just got.
 
 
 ####Others ARM
