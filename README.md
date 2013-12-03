@@ -159,7 +159,7 @@ That file uses the Serial port to get the data, so be sure to program your micro
 You'll find the Arduino code in ArduinoProject/ArduinoProject.ino. You can change the code, but be sure to connect the wires in the correct pins. When you open the Arduino Software, take a look at the Serial Port the Arduino is connected to and go to the serialcom.py file and in the `__init__` function change `porta='COM8'` to `porta='ARDUINO_PORT'`, usually on Windows the port can be COM9,COM12,... and on Linux you'll have a text like this: '/dev/tty...'. You'll also need to test the maximum value that the Arduino is sending (you can figure out that by opening the Serial Console in the Arduino Software and pressing the expression pedal as hard as you can), when you have that value, change the `limiar_superior_pedal=650` to `limiar_superior_pedal=MAX` where MAX is that value you just got.
 
 
-####Others Microcontrollers
+####Other Microcontrollers
 Be sure to send the data by the Serial port. After that, figure out what Serial port you microcontroller is connected to, the data rate and the maximum value that the expression pedal is sending. Now you'll use these values to set the default values of the `__init__` function.
 
 
@@ -174,15 +174,16 @@ Here'll briefly explain what the project files we didn't explain do and what you
 
 ####data.py
 This files handles both saving and loading data using the pickle package. Whenever you are in Regular Mode and change any filter's parameter, the program will take a snapshot of all the filters and save it in the default.data file. When you start the program, it loads that default.data filters and update the default parameters of all filters.
-This file also save and load your presets. When you change any filter's parameter while on Edit Preset Mode, this change will only be saved on its .preset file, in other words: this change will not be saved in the default.data.
 
-What you may improve ? Maybe saving the presets in the cloud. Making possible to download, upload, rate, share presets would be pretty cool.
+This file also saves and loads your presets. When you change any filter's parameter while on Edit Preset Mode, this change will only be saved on its .preset file, in other words: this change will not be saved in the default.data.
+
+What you may improve ? Maybe saving the presets in the cloud. Making possible to download, upload, rate and share presets would be pretty cool.
 
 
 ####lib.py
 This file handles some unrelated stuff: the `FloatSlider` class (which we didn't make, in the source code you can see the author), `DataGen` class and the `MyThread` class (yes, we completely forgot to change the name to a useful name).
 - The `FloatSlider`, as its name implies change the standard `Slider` class of the wxPython package to accept float values.
-- The `DataGen` returns a tuple with two values: the input and the output audio.
+- The `DataGen` returns a tuple with two float values: the input and the output audio.
 - The `MyThread` controls the update of the input and the output graphs.
 
 
@@ -191,16 +192,17 @@ What you may improve ? You could improve the performance of `DataGen` and `MyThr
 ####player.py
 This file handles the audio (both recording and playing). Basically, it contains functions to play, pause and change filters while playing.
 
-What you may improve ? You may want to change the `ChangeableStream` class (yes, change the changeable) and let it faster by updating the `self.last` in the same rate of the graph update rate.
+What you may improve ? You may want to change the `ChangeableStream` class (yes, change the changeable) and make it faster by updating the `self.last` in the same rate of the graph update rate.
 
 
 ####gui.py
 This is the main file, the king of the kings. It has over one thousand lines and despite to create the GUI (General User Interface), it also connects all the files.
 
-This file is the one that may need more improves than the others. And what that could be ? You could improve the interface, make it brighter, prettier and faster. You could also create new features like user defined effects group and more menus and buttons !
+This file is the one that may need more improvement than the others. And what that could be ? You could improve the interface, make it brighter, prettier and faster. You could also create new features like user defined effects group and more menus and buttons !
 
 
 We've already introduced the other two files: filters.py and serialcom.py in previous sections, so take a look at them.
+
 
 ----
 
