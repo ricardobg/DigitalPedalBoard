@@ -94,7 +94,7 @@ def filtro_delay_variavel(lag=2.):
 def amp(sig, ganho, ganho_max):
      for el in sig:
          ret = el*(next(iter(ganho))*ganho_max)            
-         if ret > 1: yield 1.
+         if builtins.abs(ret) > 1: yield el/builtins.abs(el)
          else: yield ret
 def amplificador(ganho_max=5.0):
     """
