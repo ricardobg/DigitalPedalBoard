@@ -28,7 +28,7 @@ We haven't translated everything to English yet, so if you know some Portugues, 
 
 Actually, if you don't want to, you don't need to buy anything, you can use our program without a pedalboard (but you'll need to use your mouse to change the effects).
 
-But if you want your physical pedalboard, you'll need a ARM board, two foot switches and a expression pedal. And some eletrical components (only some resistors and a variable resistor).
+But if you want your physical pedalboard, you'll need an ARM board, two foot switches and a expression pedal. And some eletrical components (only some resistors and a variable resistor).
 Soon we will post the eletrical components and connections of our pedalboard.
 
 
