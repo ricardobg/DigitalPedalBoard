@@ -157,11 +157,11 @@ That file uses the Serial port to get the data, so be sure to program your ARM t
 
 
 ####Arduino
-You'll find the Arduino code in ArduinoProject/ArduinoProject.ino. You can change the code, but be sure to connect the wires in the correct pins. When you open the Arduino Software, take a look at the Serial Port the Arduino is connected to and go to the serialcom.py file and in the '__init__' function change porta='COM8' to porta='ARDUINO_PORT', usually on Windows the port can be COM9,COM12,... and on Linux you'll have a text like this: '/dev/tty...'. You'll also need to test the maximum value that the Arduino is sending (you can figure out that by opening the Serial Console in the Arduino Software and pressing the expression pedal as hard as you can), when you have that value, change the limiar_superior_pedal=650 to limiar_superior_pedal=MAX_VALUE, where MAX_VALUE is that value you just got.
+You'll find the Arduino code in ArduinoProject/ArduinoProject.ino. You can change the code, but be sure to connect the wires in the correct pins. When you open the Arduino Software, take a look at the Serial Port the Arduino is connected to and go to the serialcom.py file and in the init function change porta='COM8' to porta='ARDUINO_PORT', usually on Windows the port can be COM9,COM12,... and on Linux you'll have a text like this: '/dev/tty...'. You'll also need to test the maximum value that the Arduino is sending (you can figure out that by opening the Serial Console in the Arduino Software and pressing the expression pedal as hard as you can), when you have that value, change the limiar_superior_pedal=650 to limiar_superior_pedal=MAX_VALUE, where MAX_VALUE is that value you just got.
 
 
 ####Others ARM
-Be sure to send the data by the Serial port. After that, figure out what Serial port you ARM is connected, the data rate and the maximum value that the expression pedal is sending. Now you'll use these values to set the default values of the __init__ function.
+Be sure to send the data by the Serial port. After that, figure out what Serial port you ARM is connected to, the data rate and the maximum value that the expression pedal is sending. Now you'll use these values to set the default values of the init function.
 
 
 Your ARM now should be ready, start the gui.py program, play a preset and try it out !
