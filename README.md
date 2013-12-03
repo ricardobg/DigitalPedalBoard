@@ -169,7 +169,7 @@ Your microcontroller now should be ready, start the gui.py program, play a prese
 
 
 ##Advanced Topics
-You changed everything you could changed, created an awesome pedalboard with satelite communication, made more than 8000 effects, what now ?
+You changed everything you could change, created an awesome pedalboard with satelite communication, made more than 8000 effects, what now ?
 Here'll briefly explain what the project files we didn't explain do and what you could improve.
 
 ####data.py
