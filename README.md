@@ -166,5 +166,6 @@ Be sure to send the data by the Serial port. After that, figure out what Serial 
 
 Your ARM now should be ready, start the gui.py program, play a preset and try it out !
 
-
+Copyright (C) 2013 Daniel Ken Fujimori Killner, Gabriel Moura Vieira Martinez,Rafael Alves de Araujo Sena, Ricardo Boccoli Gallego, Danilo de Jesus da Silva Bellini
+License is GPLv3. See COPYING.txt for more details.
 
