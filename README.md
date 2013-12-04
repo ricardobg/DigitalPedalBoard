@@ -18,7 +18,7 @@ But if you want to create your own effects and make your physical pedalboard, yo
  - If you want to build everything by yourself, you may need to know how to program a microcontroller (we recommend [Arduino](http://arduino.cc/ "Arduino")), but you can choose any microcontroller you want
 
 
-We haven't translated everything to English yet, so if you know some Portugues, it would be very helpful.
+We haven't translated everything to English yet, so if you know some Portuguese, it would be very helpful.
 
 
 *We used only Python 2.7, we didn't try it out on Python 3, it may work or it may not. You can test by yourself and let us know what happened (we won't pay for any damage that this may cause).
