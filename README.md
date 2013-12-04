@@ -29,7 +29,24 @@ We haven't translated everything to English yet, so if you know some Portuguese,
 Actually, if you don't want to, you don't need to buy anything, you can use our program without a pedalboard (but you'll need to use your mouse to change the effects).
 
 But if you want your physical pedalboard, you'll need a microcontroller (like Microchip PIC, ARM and Atmel AVR), two foot switches and a expression pedal. And some eletrical components (only some resistors and a variable resistor).
-Soon we will post the eletrical components and connections of our pedalboard.
+
+We made our own pedalboard and we are sharing our schematics. Be free to use and improve them.
+
+
+![alt-text](/screenshots/switches.png)
+
+This is the foot switch circuit. Very simple, we don't need anything fancy.
+And of course, it's the same circuit for both next and previous switch.
+You'll need two 1kΩ and 2 foot switches to assemble that. And some wires.
+
+![alt-text](/screenshots/pedal.png)
+
+This is the expression pedal circuit. We used a LDR, but you can use a potentiometer or other variable resistor. If you want to use a LDR, don't forget to protect it against any external light and you'll have to use a LED connected to a resistor and this connected to the ground and to the 5V source. You can use other light source as well.
+
+In our pedalboard, when you press the expression pedal, the shield between the LED and the LDR lower, so we have more light on the LDR and its resistance increases and the voltage at the pin also increases.
+You'll need two 1kΩ resistor, a LDR and a LED.
+
+The 5V source comes from the Arduino. We used the Arduino Leonardo, but it should work just fine on Arduino Uno or others.
 
 
 ##Installing
