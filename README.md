@@ -163,7 +163,7 @@ Now you are ready to go, start the gui.py program and test your own effects !
 
 ##Setting your Microcontroller
 
-Now, let's head to the physical pedalboard. We'll assume that you already have the circuit working (as we said, soon we'll post our circuit schematic). The python file that handles the communication with the Arduino is the serialcom.py.
+Now, let's head to the physical pedalboard. We'll assume that you already have the circuit working. The python file that handles the communication with the Arduino is the serialcom.py.
 That file uses the Serial port to get the data, so be sure to program your microcontroller to send data through Serial port using the following code: 
 (identification,value). Where identification can be:
 
