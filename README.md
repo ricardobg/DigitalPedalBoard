@@ -46,7 +46,7 @@ This is the expression pedal circuit. We used a LDR, but you can use a potentiom
 In our pedalboard, when you press the expression pedal, the shield between the LED and the LDR lower, so we have more light on the LDR and its resistance increases and the voltage at the pin also increases.
 You'll need one 1kΩ resistor, a LDR and a LED to assemble that.
 
-The 5V source comes from the Arduino. We used the Arduino Leonardo, but it should work just fine on Arduino Uno or others.
+The 5V source comes from the Arduino. We used the Arduino Leonardo, but it should work just fine on Arduino Uno or other.
 
 
 ##Installing
