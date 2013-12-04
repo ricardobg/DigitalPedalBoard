@@ -17,13 +17,13 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """
-Arquivo com classes importantes, que resolvem alguns problemas do wx principalmente
+File with some important unrelated classes
 """
 import wx
 from threading import *
 from player import *
 
-# Adaptado de http://stackoverflow.com/questions/4709087/wxslider-with-floating-point-values
+# Based on http://stackoverflow.com/questions/4709087/wxslider-with-floating-point-values
 class FloatSlider(wx.Slider):
     """
     Classe que muda o Slider para aceitar float (e nao apenas inteiros)
