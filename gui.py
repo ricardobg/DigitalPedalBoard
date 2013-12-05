@@ -1009,7 +1009,7 @@ class edit_window (wx.Dialog):
     
      def OnSave(self, e):
          """
-         Save the changes.
+         Saves the changes.
          """
          valores = []
          i = 0

@@ -17,14 +17,16 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 """
-Arquivo que cuida da execução do Áudio, assim como a aplicação dos filtros
+File that handles the audio player, and the application of filters
 """
 
 from audiolazy import Stream, Streamix, AudioIO, CascadeFilter, line, chunks
 import filters
+
+# Change this to 256 (or lower) to reduce the delay time
 #chunks.size = 256
 
-# Classe adaptada de https://github.com/danilobellini/audiolazy/blob/master/examples/keyboard.py
+# Class based on https://github.com/danilobellini/audiolazy/blob/master/examples/keyboard.py
 class ChangeableStream(Stream):
   """
   Mudança na classe Stream para podermos zerar/limitar a Stream enquanto ela é tocada

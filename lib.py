@@ -26,7 +26,7 @@ from player import *
 # Based on http://stackoverflow.com/questions/4709087/wxslider-with-floating-point-values
 class FloatSlider(wx.Slider):
     """
-    Classe que muda o Slider para aceitar float (e nao apenas inteiros)
+    Class that modifies the Slider class of wx and makes it accept float (instead of only integers) 
     """
 
     def __init__(self, parent, id=-1, value=0.00, min_val=None, max_val=None, res=1e-4,
@@ -38,8 +38,6 @@ class FloatSlider(wx.Slider):
         self._max = max_val
         self.texto = texto
         self._res = res
-        #self.precision = int(numpy.log10(1/res))
-        #print self.precision
         ival, imin, imax = [round(v/res) for v in (value, min_val, max_val)]
         self._islider = super(FloatSlider, self)
         self._islider.__init__(
@@ -110,8 +108,8 @@ class FloatSlider(wx.Slider):
 
 class DataGen(object):
     """
-    Classe que gera uma lista dos valores de um stream
-    Usada para gerar o gráfico
+    Class that generates a list of stream's values
+    Used to generate a graph.
     """
     def __init__(self, window):
         self.window = window
@@ -121,6 +119,9 @@ class DataGen(object):
             return retorno
 
 class MyThread(Thread):
+    """
+    Graph Thread
+    """
     def __init__(self, time, func, window):
         Thread.__init__(self)
         self.stopped = Event()
@@ -128,7 +129,6 @@ class MyThread(Thread):
         self.time = time
         self.window = window
         self._parar = False
-        #self.player =Player
     def run(self):
         while not self.stopped.wait(self.time/1000.0):
            if self._parar:
