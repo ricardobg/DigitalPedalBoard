@@ -12,7 +12,7 @@ If you just wanna play some musics and don't want to create your own effects or 
 But if you want to create your own effects and make your physical pedalboard, you'll need to learn (if you don't know it already):
 
  - Python 2.7* programming language (take a look at the [Python 2 Official Tutorial](http://docs.python.org/2/tutorial/ "Python 2 Official Tutorial"))
- - Basic knowledge in DSP (Digital Signal Processing), you only have to understand how to make things work and to understand some basic filters
+ - Basic knowledge in DSP (Digital Signal Processing), you only have to understand how to make things work and some basic filters
  - [AudioLazy](https://github.com/danilobellini/audiolazy "AudioLazy") package
  - If you want to build a physical pedalboard, you'll need some knowledge in eletrical circuits (no big deal, you won't need to know how to analyze transient ciruits and complicated stuff)
  - If you want to build everything by yourself, you may need to know how to program a microcontroller (we recommend [Arduino](http://arduino.cc/ "Arduino")), but you can choose any microcontroller you want
@@ -44,7 +44,7 @@ You'll need two 1kΩ resistors and 2 foot switches to assemble that. And some wi
 This is the expression pedal circuit. We used a LDR, but you can use a potentiometer or other variable resistor. If you want to use a LDR, don't forget to protect it against any external light and you'll have to use a LED connected to a resistor and this connected to the ground and to the 5V source. You can use other light source as well.
 
 In our pedalboard, when you press the expression pedal, the shield between the LED and the LDR lower, so we have more light on the LDR and its resistance increases and the voltage at the pin also increases.
-You'll need one 1kΩ resistor, a LDR and a LED to assemble that.
+You'll need two 1kΩ resistor, a LDR and a LED to assemble that.
 
 The 5V source comes from the Arduino. We used the Arduino Leonardo, but it should work just fine on Arduino Uno or other.
 
@@ -67,7 +67,7 @@ Ok, let's head to the main stuff: Making things work !
   
   Some of them are included in WinPython installation, you can see that by opening the "WinPython Control Panel" program.
 
-3. If you'll use Arduino, install the [Arduino Software](http://arduino.cc/en/Main/Software "Arduino Software"). If you are using other microcontroller, install the required software.
+3. If you'll use Arduino, install the [Arduino Software](http://arduino.cc/en/Main/Software "Arduino Software"). If you are goint to use other microcontroller, install the required software.
 
 Now you have everything you need to get started.
 
@@ -87,7 +87,7 @@ In the right area we have the buttons previous, next, stop and play. The next an
 
 To start testing, plug your guitar or bass in your computer (and configure it as the main audio input) or use your microphone, press the play button and listen. Pretty cool, right ?
 
-Now, try out applying some effects by pressing its checkboxes (we recommend to start with the echo and chaging the echo time to 1 second).
+Now, try to apply some effects by pressing its checkboxes (we recommend to start with the echo and chaging the echo time to 1 second).
 
 The program has basically 3 modes: Regular Mode (the one we were using), Preset Editing Mode and Preset Mode. Below we'll explain them.
 
@@ -142,7 +142,7 @@ def skip_samples(input, skip_rate):
       i+=1
 ```
 
-The second function `effect_information` defines some information about the effect. It defines the effect name, its parameters and if it uses (True) or not (False) the expression pedal. When you use the expression pedal you'll need to declare in the `signal_processing_function` a variable that will contain that data, and it must be the first variable after the input. Be aware that the pedal variable is a `ControlStream` (take a look at the AudioLazy documentation) and its value is a float that ranges from 0 to 1.
+The second function `effect_information` defines some information about the effect. It defines the effect name, its parameters and if it uses (True) or not (False) the expression pedal. When you use the expression pedal you'll need to declare a new parameter in the `signal_processing_function` function, this parameter will contain the expression pedal data and it must be the first parameter after the input. Be aware that the pedal variable is a `ControlStream` (take a look at the AudioLazy documentation) and its value is a float that ranges from 0 to 1.
 
 
 After creating your <del>Hello World</del> cool effects, you'll need to add them to your filter's list, in the filters.py file, try to find something like this:
@@ -190,7 +190,7 @@ You changed everything you could change, created an awesome pedalboard with sate
 Here'll briefly explain what the project files we didn't explain do and what you could improve.
 
 ####data.py
-This files handles both saving and loading data using the pickle package. Whenever you are in Regular Mode and change any filter's parameter, the program will take a snapshot of all the filters and save it in the default.data file. When you start the program, it loads that default.data filters and update the default parameters of all filters.
+This files handles both saving and loading data using the pickle package. Whenever you are in Regular Mode and change any filter's parameter, the program will take a snapshot of all the filters and save its parameter's values in the default.data file. When you start the program, it loads that default.data and updates the default parameters of all filters.
 
 This file also saves and loads your presets. When you change any filter's parameter while on Edit Preset Mode, this change will only be saved on its .preset file, in other words: this change will not be saved in the default.data.
 
