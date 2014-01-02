@@ -67,7 +67,7 @@ Ok, let's head to the main stuff: Making things work !
   
   Some of them are included in WinPython installation, you can see that by opening the "WinPython Control Panel" program.
 
-3. If you'll use Arduino, install the [Arduino Software](http://arduino.cc/en/Main/Software "Arduino Software"). If you are goint to use other microcontroller, install the required software.
+3. If you'll use Arduino, install the [Arduino Software](http://arduino.cc/en/Main/Software "Arduino Software"). If you are going to use other microcontroller, install the required software.
 
 Now you have everything you need to get started.
 
