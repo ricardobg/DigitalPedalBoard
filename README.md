@@ -223,7 +223,7 @@ We've already introduced the other three files: filters.py, serialcom.py, Arduin
 
 ----
 
-Copyright (C) 2013 Daniel Ken Fujimori Killner, Gabriel Moura Vieira Martinez,Rafael Alves de Araujo Sena, Ricardo Boccoli Gallego, Danilo de Jesus da Silva Bellini.
+Copyright (C) 2013 Daniel Ken Fujimori Killner, Gabriel Moura Vieira Martinez, Rafael Alves de Araujo Sena, Ricardo Boccoli Gallego, Danilo de Jesus da Silva Bellini.
 
 License is GPLv3. See COPYING.txt for more details.
 
