@@ -5,9 +5,9 @@ Build your own pedal board and create cool and unique effects to play your guita
 
 
 
-##What do I need to know ?
+##What do I need to know?
 
-If you just wanna play some musics and don't want to create your own effects or personalize your program you can just follow the installing steps and get started !
+If you just wanna play some musics and don't want to create your own effects or personalize your program you can just follow the installing steps and get started!
 
 But if you want to create your own effects and make your physical pedalboard, you'll need to learn (if you don't know it already):
 
@@ -24,7 +24,7 @@ We haven't translated everything to English yet, so if you know some Portuguese,
 *We used only Python 2.7, we didn't try it out on Python 3, it may work or it may not. You can test by yourself and let us know what happened (we won't pay for any damage that this may cause).
 
 
-##What do I need to buy ?
+##What do I need to buy?
 
 Actually, if you don't want to, you don't need to buy anything, you can use our program without a pedalboard (but you'll need to use your mouse to change the effects).
 
@@ -51,7 +51,7 @@ The 5V source comes from the Arduino. We used the Arduino Leonardo, but it shoul
 
 ##Installing
 
-Ok, let's head to the main stuff: Making things work !
+Ok, let's head to the main stuff: Making things work!
 
 1. You'll need to install Python 2.7 on your computer. If you have Windows (our sincere condolences) you may want to install Python by using this program: [WinPython](https://code.google.com/p/winpython/ "WinPython"). If you have Linux or Mac, just download Python 2.7 from the official website: http://www.python.org/getit/
 
@@ -85,7 +85,7 @@ A effect has 3 things: Its name, a checkbox (you can activate or desactivate) an
 
 In the right area we have the buttons previous, next, stop and play. The next and previous buttons are used to change effects when you are in preset mode. We also have two graphs which show the input and the output audio.
 
-To start testing, plug your guitar or bass in your computer (and configure it as the main audio input) or use your microphone, press the play button and listen. Pretty cool, right ?
+To start testing, plug your guitar or bass in your computer (and configure it as the main audio input) or use your microphone, press the play button and listen. Pretty cool, right?
 
 Now, try to apply some effects by pressing its checkboxes (we recommend to start with the echo and chaging the echo time to 1 second).
 
@@ -93,7 +93,7 @@ The program has basically 3 modes: Regular Mode (the one we were using), Preset 
 
 ####Regular Mode
 
-If you just want to test the effects, this is the mode for you ! It allows you to activate and desactivate effects. When you start the program, this mode will be active. If you are in other mode and want to use this mode, just go to the menu Preset -> Back.
+If you just want to test the effects, this is the mode for you! It allows you to activate and desactivate effects. When you start the program, this mode will be active. If you are in other mode and want to use this mode, just go to the menu Preset -> Back.
 
 
 ####Preset Editing Mode
@@ -108,7 +108,7 @@ This mode plays a preset. You can see the applied effects and go to the next or 
 To go to this mode, you can press the play button when editing your preset or go to Preset -> Play Preset.
 
 
-You can also save your presets and share them if your friends !
+You can also save your presets and share them if your friends!
 
 
 ##Making your own effects
@@ -158,7 +158,7 @@ filtros = {u"Basic Effects": (passa_altas,passa_baixas,passa_tudo, amplificador,
 
 It's a dictionary that contains `"effect_group": (effect1,effect2,effect3,...)` You can create a new group or add your effects to an existing group. What you need to add is just the name of the function that contains information about your filter.
 
-Now you are ready to go, start the gui.py program and test your own effects !
+Now you are ready to go, start the gui.py program and test your own effects!
 
 
 ##Setting your Microcontroller
@@ -182,11 +182,11 @@ Be sure to send the data by the Serial port. After that, figure out what Serial 
 
 You can change the way to send data to something cooler (like wireless communication or USB), to do that you'll only need to modify the serialcom.py file (and yes, its name will lose all its sense of being so). You'll also need to understand that file to make the right function calls and update everything that must be updated.
 
-Your microcontroller now should be ready, start the gui.py program, play a preset and try it out !
+Your microcontroller now should be ready, start the gui.py program, play a preset and try it out!
 
 
 ##Advanced Topics
-You changed everything you could change, created an awesome pedalboard with satelite communication, made more than 8000 effects, what now ?
+You changed everything you could change, created an awesome pedalboard with satelite communication, made more than 8000 effects, what now?
 Here'll briefly explain what the project files we didn't explain do and what you could improve.
 
 ####data.py
@@ -194,7 +194,7 @@ This files handles both saving and loading data using the pickle package. Whenev
 
 This file also saves and loads your presets. When you change any filter's parameter while on Edit Preset Mode, this change will only be saved on its .preset file, in other words: this change will not be saved in the default.data.
 
-What you may improve ? Maybe saving the presets in the cloud. Making possible to download, upload, rate and share presets would be pretty cool.
+What you may improve? Maybe saving the presets in the cloud. Making possible to download, upload, rate and share presets would be pretty cool.
 
 
 ####lib.py
@@ -204,18 +204,18 @@ This file handles some unrelated stuff: the `FloatSlider` class (which we didn't
 - The `MyThread` controls the update of the input and the output graphs.
 
 
-What you may improve ? You could improve the performance of `DataGen` and `MyThread`, which is a critical point of the program.
+What you may improve? You could improve the performance of `DataGen` and `MyThread`, which is a critical point of the program.
 
 ####player.py
 This file handles the audio (both recording and playing). Basically, it contains functions to play, pause and change filters while playing.
 
-What you may improve ? You may want to change the `ChangeableStream` class (yes, change the changeable) and make it faster by updating the `self.last` in the same rate of the graph update rate.
+What you may improve? You may want to change the `ChangeableStream` class (yes, change the changeable) and make it faster by updating the `self.last` in the same rate of the graph update rate.
 
 
 ####gui.py
 This is the main file, the king of the kings. It has over one thousand lines and despite to create the GUI (General User Interface), it also connects all the files.
 
-This file is the one that may need more improvement than the others. And what that could be ? You could improve the interface, make it brighter, prettier and faster. You could also create new features like user defined effects group and more menus and buttons !
+This file is the one that may need more improvement than the others. And what that could be? You could improve the interface, make it brighter, prettier and faster. You could also create new features like user defined effects group and more menus and buttons!
 
 
 We've already introduced the other three files: filters.py, serialcom.py, ArduinoProject/ArduinoProject.ino in previous sections, so take a look at them.
