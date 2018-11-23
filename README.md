@@ -5,7 +5,7 @@ Build your own pedal board and create cool and unique effects to play your guita
 
 
 
-##What do I need to know?
+## What do I need to know?
 
 If you just wanna play some musics and don't want to create your own effects or personalize your program you can just follow the installing steps and get started!
 
@@ -24,7 +24,7 @@ We haven't translated everything to English yet, so if you know some Portuguese,
 *We used only Python 2.7, we didn't try it out on Python 3, it may work or it may not. You can test by yourself and let us know what happened (we won't pay for any damage that this may cause).
 
 
-##What do I need to buy?
+## What do I need to buy?
 
 Actually, if you don't want to, you don't need to buy anything, you can use our program without a pedalboard (but you'll need to use your mouse to change the effects).
 
@@ -49,7 +49,7 @@ You'll need two 1kΩ resistor, a LDR and a LED to assemble that.
 The 5V source comes from the Arduino. We used the Arduino Leonardo, but it should work just fine on Arduino Uno or other.
 
 
-##Installing
+## Installing
 
 Ok, let's head to the main stuff: Making things work!
 
@@ -73,7 +73,7 @@ Now you have everything you need to get started.
 
 
 
-##Getting Started
+## Getting Started
 
 Start the gui.py program (python gui.py), you'll see something like this:
 
@@ -91,18 +91,18 @@ Now, try to apply some effects by pressing its checkboxes (we recommend to start
 
 The program has basically 3 modes: Regular Mode (the one we were using), Preset Editing Mode and Preset Mode. Below we'll explain them.
 
-####Regular Mode
+#### Regular Mode
 
 If you just want to test the effects, this is the mode for you! It allows you to activate and desactivate effects. When you start the program, this mode will be active. If you are in other mode and want to use this mode, just go to the menu Preset -> Back.
 
 
-####Preset Editing Mode
+#### Preset Editing Mode
 
 This mode is to edit and create presets. If you don't know what a preset is: presets are lists of lists of effects. In other words, you'll have a numbered list (0,1,2,3,..) and any position of the list contains some effects that will be applied when you are in this position (this is very useful for playing songs). This mode isn't complicated, you can go to this mode by 3 ways: File -> New Preset, File -> Load Preset, Preset -> Edit Preset.
 When you are in this mode, you'll see a numbered list in the right area. You can press the next or previous button to navigate and when you are in the last position if you press next, you'll create a new position. You can also change the position by using your mouse. When you select a position, you'll only need to select the effects you want to apply and change its parameters.
 
 
-####Preset Mode
+#### Preset Mode
 
 This mode plays a preset. You can see the applied effects and go to the next or to the previous position of the preset.
 To go to this mode, you can press the play button when editing your preset or go to Preset -> Play Preset.
@@ -111,7 +111,7 @@ To go to this mode, you can press the play button when editing your preset or go
 You can also save your presets and share them if your friends!
 
 
-##Making your own effects
+## Making your own effects
 
 To create your own effects, you'll only need to edit the filters.py file. Open it on a text editor and start learning, it contains some effects which we created.
 The basic structure of an effect is:
@@ -161,7 +161,7 @@ It's a dictionary that contains `"effect_group": (effect1,effect2,effect3,...)` 
 Now you are ready to go, start the gui.py program and test your own effects!
 
 
-##Setting your Microcontroller
+## Setting your Microcontroller
 
 Now, let's head to the physical pedalboard. We'll assume that you already have the circuit working. The python file that handles the communication with the Arduino is the serialcom.py.
 That file uses the Serial port to get the data, so be sure to program your microcontroller to send data through Serial port using the following code: 
@@ -172,11 +172,11 @@ That file uses the Serial port to get the data, so be sure to program your micro
 2: The expression pedal state changed. The value can assume any integer between 0 and `limiar_superior_pedal` (which you can define).
 
 
-####Arduino
+#### Arduino
 You'll find the Arduino code in ArduinoProject/ArduinoProject.ino. You can change the code, but be sure to connect the wires to the correct pins. When you open the Arduino Software, take a look at the Serial Port the Arduino is connected to and go to the serialcom.py file and in the `__init__` function change `porta='COM8'` to `porta='ARDUINO_PORT'`, usually on Windows the port can be COM9,COM12,... and on Linux you'll have a text like this: '/dev/tty...'. You'll also need to test the maximum value that the Arduino is sending (you can figure out that by opening the Serial Console in the Arduino Software and pressing the expression pedal as hard as you can), when you have that value, change the `limiar_superior_pedal=650` to `limiar_superior_pedal=MAX` where MAX is that value you just got.
 
 
-####Other Microcontrollers
+#### Other Microcontrollers
 Be sure to send the data by the Serial port. After that, figure out what Serial port you microcontroller is connected to, the data rate and the maximum value that the expression pedal is sending. Now you'll use these values to set the default values of the `__init__` function.
 
 
@@ -185,11 +185,11 @@ You can change the way to send data to something cooler (like wireless communica
 Your microcontroller now should be ready, start the gui.py program, play a preset and try it out!
 
 
-##Advanced Topics
+## Advanced Topics
 You changed everything you could change, created an awesome pedalboard with satelite communication, made more than 8000 effects, what now?
 Here'll briefly explain what the project files we didn't explain do and what you could improve.
 
-####data.py
+#### data.py
 This files handles both saving and loading data using the pickle package. Whenever you are in Regular Mode and change any filter's parameter, the program will take a snapshot of all the filters and save its parameter's values in the default.data file. When you start the program, it loads that default.data and updates the default parameters of all filters.
 
 This file also saves and loads your presets. When you change any filter's parameter while on Edit Preset Mode, this change will only be saved on its .preset file, in other words: this change will not be saved in the default.data.
@@ -197,7 +197,7 @@ This file also saves and loads your presets. When you change any filter's parame
 What you may improve? Maybe saving the presets in the cloud. Making possible to download, upload, rate and share presets would be pretty cool.
 
 
-####lib.py
+#### lib.py
 This file handles some unrelated stuff: the `FloatSlider` class (which we didn't make, in the source code you can see the author), `DataGen` class and the `MyThread` class (yes, we completely forgot to change the name to a useful name).
 - The `FloatSlider`, as its name implies change the standard `Slider` class of the wxPython package to accept float values.
 - The `DataGen` returns a tuple with two float values: the input and the output audio.
@@ -206,13 +206,13 @@ This file handles some unrelated stuff: the `FloatSlider` class (which we didn't
 
 What you may improve? You could improve the performance of `DataGen` and `MyThread`, which is a critical point of the program.
 
-####player.py
+#### player.py
 This file handles the audio (both recording and playing). Basically, it contains functions to play, pause and change filters while playing.
 
 What you may improve? You may want to change the `ChangeableStream` class (yes, change the changeable) and make it faster by updating the `self.last` in the same rate of the graph update rate.
 
 
-####gui.py
+#### gui.py
 This is the main file, the king of the kings. It has over one thousand lines and despite to create the GUI (General User Interface), it also connects all the files.
 
 This file is the one that may need more improvement than the others. And what that could be? You could improve the interface, make it brighter, prettier and faster. You could also create new features like user defined effects group and more menus and buttons!
